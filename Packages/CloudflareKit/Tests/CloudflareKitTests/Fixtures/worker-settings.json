@@ -1,0 +1,9 @@
+{"success":true,"errors":[],"messages":[],"result":{
+"compatibility_date":"2026-10-01","compatibility_flags":["nodejs_compat"],
+"observability":{"enabled":true,"head_sampling_rate":1},
+"usage_model":"standard",
+"bindings":[
+{"name":"KV","type":"kv_namespace","namespace_id":"ns_1"},
+{"name":"GREETING","type":"plain_text","text":"hi"},
+{"name":"API_KEY","type":"secret_text"}
+]}}

@@ -22,6 +22,7 @@ struct WorkerDetailView: View {
             Group {
                 switch tab {
                 case .overview: WorkerOverviewView(store: store)
+                case .settings: WorkerSettingsView(store: store)
                 default: ContentUnavailableView(tab.rawValue, systemImage: "hammer", description: Text("Coming next."))
                 }
             }
