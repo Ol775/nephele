@@ -23,6 +23,7 @@ struct WorkerDetailView: View {
                 switch tab {
                 case .overview: WorkerOverviewView(store: store)
                 case .settings: WorkerSettingsView(store: store)
+                case .triggers: WorkerTriggersView(store: store)
                 default: ContentUnavailableView(tab.rawValue, systemImage: "hammer", description: Text("Coming next."))
                 }
             }

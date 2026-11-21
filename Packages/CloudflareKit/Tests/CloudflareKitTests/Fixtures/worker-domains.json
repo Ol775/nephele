@@ -1,0 +1,1 @@
+{"success":true,"errors":[],"messages":[],"result":[{"id":"dom1","hostname":"api.example.dev","service":"hello-api","zone_id":"z1","zone_name":"example.dev","environment":"production"},{"id":"dom2","hostname":"x.example.dev","service":"other","zone_id":"z1","zone_name":"example.dev","environment":"production"}]}

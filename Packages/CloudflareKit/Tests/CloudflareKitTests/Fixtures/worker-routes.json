@@ -1,0 +1,1 @@
+{"success":true,"errors":[],"messages":[],"result":[{"id":"r1","pattern":"api.example.dev/*","script":"hello-api"},{"id":"r2","pattern":"example.dev/static/*","script":"other"},{"id":"r3","pattern":"*.example.dev/*"}]}

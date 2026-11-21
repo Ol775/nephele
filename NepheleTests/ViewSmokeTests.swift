@@ -28,6 +28,7 @@ import CloudflareKitTesting
             if path.hasSuffix("/zones"), req.url?.query?.contains("per_page=50") == true { return TestAPI.reply(req, TestAPI.ok("[\(Self.zones)]")) }
             if path.contains("/dns_records") { return TestAPI.reply(req, TestAPI.ok(Self.dns)) }
             if path.hasSuffix("/workers/scripts") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"hello-api\",\"handlers\":[\"fetch\"]},{\"id\":\"cron-job\",\"handlers\":[\"scheduled\"]}]")) }
+            if path.hasSuffix("/schedules") { return TestAPI.reply(req, TestAPI.ok("{\"schedules\":[{\"cron\":\"*/30 * * * *\"}]}")) }
             if path.hasSuffix("/alerting/v3/history") { return TestAPI.reply(req, TestAPI.ok(Self.history)) }
             if path.hasSuffix("/graphql") {
                 let body = String(data: req.httpBody ?? Data(), encoding: .utf8) ?? ""
@@ -91,6 +92,12 @@ import CloudflareKitTesting
         let store = WorkerStore(script: WorkerScript(id: "hello-api"), session: w.session)
         await store.loadSettings()
         #expect(try render("worker-settings", WorkerSettingsView(store: store), w) > 5_000)
+    }
+    @Test func workerTriggersRenders() async throws {
+        let w = try await world(); await w.domains.load()
+        let store = WorkerStore(script: WorkerScript(id: "hello-api"), session: w.session)
+        await store.loadTriggers(zones: w.domains.zones.value ?? [])
+        #expect(try render("worker-triggers", WorkerTriggersView(store: store), w) > 5_000)
     }
     @Test func alertsRenders() async throws {
         let w = try await world()

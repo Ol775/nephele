@@ -13,6 +13,7 @@ final class WorkerStore {
     private(set) var settings: LoadState<WorkerSettings> = .idle
     private(set) var secretNames: LoadState<[String]> = .idle
     private(set) var workersDev: Bool?
+    var triggers: LoadState<WorkerTriggers> = .idle
     let confirm = ConfirmGate<WorkerChange>()
 
     @ObservationIgnored let session: Session
@@ -103,13 +104,15 @@ final class WorkerStore {
                 try await client.setWorkersDevSubdomain(accountID: account, script: script, enabled: on)
                 self.workersDev = on
             }
+        case .removeCron, .removeRoute, .detachDomain:
+            await confirmTriggerChange(change)
         }
     }
 
     // MARK: Shared
 
     /// Runs one write. A forbidden reply turns writes off and says which permission to add.
-    private func write(_ body: (CFClient, String, String) async throws -> Void) async {
+    func write(_ body: (CFClient, String, String) async throws -> Void) async {
         guard let client = session.client, let account = session.selectedAccountID else { return }
         formError = nil
         do { try await body(client, account, script.id) }
@@ -124,7 +127,7 @@ final class WorkerStore {
         } catch { formError = "Couldn't save that change." }
     }
 
-    private func note(_ error: any Error) -> CloudflareError {
+    func note(_ error: any Error) -> CloudflareError {
         guard let e = error as? CloudflareError else { return .transport("unknown") }
         session.handle(e)
         return e
