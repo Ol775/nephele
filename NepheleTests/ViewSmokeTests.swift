@@ -30,6 +30,7 @@ import CloudflareKitTesting
             if path.hasSuffix("/workers/scripts") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"hello-api\",\"handlers\":[\"fetch\"]},{\"id\":\"cron-job\",\"handlers\":[\"scheduled\"]}]")) }
             if path.hasSuffix("/kv/namespaces") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"ns1\",\"title\":\"CACHE\"},{\"id\":\"ns2\",\"title\":\"SESSIONS\"}]")) }
             if path.hasSuffix("/d1/database") { return TestAPI.reply(req, TestAPI.ok("[{\"uuid\":\"db-1\",\"name\":\"app-db\"}]")) }
+            if path.hasSuffix("/r2/buckets") { return TestAPI.reply(req, TestAPI.ok("{\"buckets\":[{\"name\":\"media\"}]}")) }
             if path.hasSuffix("/schedules") { return TestAPI.reply(req, TestAPI.ok("{\"schedules\":[{\"cron\":\"*/30 * * * *\"}]}")) }
             if path.hasSuffix("/alerting/v3/history") { return TestAPI.reply(req, TestAPI.ok(Self.history)) }
             if path.hasSuffix("/graphql") {

@@ -108,7 +108,7 @@ final class KVStore {
     /// Adds a key with an empty-or-given text value.
     func addKey(_ name: String, value text: String) async {
         formError = nil
-        guard !name.isEmpty, name.utf8.count <= 512 else { formError = "A key name is 1 to 512 bytes."; return }
+        guard !name.isEmpty, name.utf8.count <= 512, name != ".", name != ".." else { formError = "A key name is 1 to 512 bytes and can't be . or ..."; return }
         guard let ns = selected else { return }
         await write { client, account in
             try await client.putKVValue(accountID: account, namespace: ns.id, key: name, value: Data(text.utf8))

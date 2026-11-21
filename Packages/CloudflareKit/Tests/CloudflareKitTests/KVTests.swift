@@ -59,4 +59,13 @@ import CloudflareKitTesting
         #expect(stub.recorded.map { $0.request.httpMethod } == ["DELETE", "DELETE"])
         #expect(stub.recorded[1].request.url?.path == "/client/v4/accounts/acc1/storage/kv/namespaces/ns1")
     }
+
+    @Test func dotSegmentsAreEncodedSoAKeyCannotClimbToTheNamespace() async throws {
+        #expect(pathSegment("..") == "%2E%2E")
+        #expect(pathSegment(".") == "%2E")
+        #expect(pathSegment("a.b") == "a.b")
+        let stub = StubServer { req in (StubURLProtocol.response(req.url!), Data("{\"success\":true,\"errors\":[],\"result\":null}".utf8)) }
+        try await client(stub).deleteKVKey(accountID: "acc1", namespace: "ns1", key: "..")
+        #expect(stub.recorded.first?.request.url?.absoluteString.hasSuffix("/values/%2E%2E") == true)
+    }
 }

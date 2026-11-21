@@ -1,10 +1,12 @@
 # Nephele
 
-A native macOS 26 app for managing a Cloudflare account: domains and DNS, alerts, usage, Workers, and (coming next) storage and Zero Trust. Pure Swift and SwiftUI. An independent project, not affiliated with Cloudflare.
+A native macOS 26 app for managing a Cloudflare account: domains and DNS, alerts, usage, Workers, storage, and (coming next) Zero Trust. Pure Swift and SwiftUI. An independent project, not affiliated with Cloudflare.
 
 Phase 1 covers sign-in with an API token, an overview, domains with full DNS management, alerts with notifications and a menu bar item, usage against Free plan allowances, Settings and a full Appearance screen.
 
 Phase 2a adds Workers: list, settings, variables, write-only secrets, routes, custom domains, cron triggers, versions with deploy and rollback, a code editor that saves new versions, live logs, templates, and delete. Saving code creates a version; deploying it is a separate, confirmed step.
+
+Phase 2b adds Storage: Workers KV (namespaces, keys, text values), D1 (databases and a SQL console, where anything that changes data asks first) and R2 (buckets and objects, delete only for now).
 
 ## Privacy
 
@@ -19,7 +21,7 @@ In the Cloudflare dashboard go to Profile, API Tokens, Create Token. Start with 
 - Zone: Zone Read, DNS Read
 - Account: Notifications Read, Account Analytics Read, Account Settings Read
 
-For Workers add Workers Scripts Read (and Workers Tail Read for live logs, Workers Routes Read per zone). Add DNS Edit or Workers Scripts Edit later if you want to make changes. Missing permissions never break the app: the screens that need them show a prompt instead.
+For Workers add Workers Scripts Read (and Workers Tail Read for live logs, Workers Routes Read per zone). For storage add Workers KV Storage, D1 and Workers R2 Storage Read. Add DNS Edit, Workers Scripts Edit or the storage Edit permissions later if you want to make changes. Missing permissions never break the app: the screens that need them show a prompt instead.
 
 ## Build
 

@@ -21,31 +21,65 @@ public struct D1Result: Sendable, Equatable {
 
 public enum D1SQL {
     private static let writeWords: Set<String> = ["insert", "update", "delete", "replace", "drop", "alter", "create", "attach", "detach", "vacuum", "reindex", "truncate"]
+    /// PRAGMAs that only read, with their usual argument form.
+    private static let readPragmas: Set<String> = ["table_info", "table_xinfo", "table_list", "index_list", "index_info", "index_xinfo", "foreign_key_list", "database_list", "collation_list"]
 
-    /// True only when every statement is a plain read: SELECT, WITH, EXPLAIN or a PRAGMA that sets nothing,
-    /// with no write keyword anywhere in it. Anything doubtful counts as a write, so it asks first.
+    /// `"name"` with any quote doubled, for building SQL around a table name.
+    public static func quoteIdentifier(_ name: String) -> String { "\"" + name.replacingOccurrences(of: "\"", with: "\"\"") + "\"" }
+
+    /// True only when every statement is a plain read: SELECT, WITH, EXPLAIN or a read-only PRAGMA, with no write
+    /// keyword in its code (text inside quotes and comments is skipped by a real scanner, not guessed at).
+    /// Anything doubtful, including an unclosed quote or comment, counts as a write so it asks first.
     public static func isReadOnly(_ sql: String) -> Bool {
-        let statements = stripComments(sql).split(separator: ";").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
-        guard !statements.isEmpty else { return false }
-        return statements.allSatisfy { statement in
-            let words = statement.lowercased().split { !$0.isLetter && !$0.isNumber && $0 != "_" }.map(String.init)
+        guard let statements = split(sql), !statements.isEmpty else { return false }
+        return statements.allSatisfy { code in
+            let words = code.lowercased().split { !$0.isLetter && !$0.isNumber && $0 != "_" }.map(String.init)
             guard let first = words.first, ["select", "with", "explain", "pragma"].contains(first) else { return false }
-            if first == "pragma" && statement.contains("=") { return false }
+            if first == "pragma" {
+                guard words.count >= 2, readPragmas.contains(words[1]), !code.contains("=") else { return false }
+            }
             return !words.contains { writeWords.contains($0) }
         }
     }
 
-    private static func stripComments(_ sql: String) -> String {
-        var out = "", i = sql.startIndex
-        while i < sql.endIndex {
-            if sql[i...].hasPrefix("--") {
-                while i < sql.endIndex, sql[i] != "\n" { i = sql.index(after: i) }
-            } else if sql[i...].hasPrefix("/*") {
-                if let end = sql.range(of: "*/", range: i..<sql.endIndex) { i = end.upperBound } else { i = sql.endIndex }
-                out += " "
-            } else { out.append(sql[i]); i = sql.index(after: i) }
+    /// Splits on `;` outside quotes and drops comments. Quoted text becomes `''` so only code remains.
+    /// Returns nil when a quote, bracket or block comment is never closed.
+    static func split(_ sql: String) -> [String]? {
+        var statements: [String] = [], current = ""
+        let chars = Array(sql)
+        var i = 0
+        while i < chars.count {
+            let c = chars[i]
+            switch c {
+            case "'", "\"", "`":
+                var j = i + 1, closed = false
+                while j < chars.count {
+                    if chars[j] == c {
+                        if j + 1 < chars.count, chars[j + 1] == c { j += 2; continue }
+                        closed = true; break
+                    }
+                    j += 1
+                }
+                guard closed else { return nil }
+                current += "''"; i = j + 1
+            case "[":
+                guard let close = chars[(i + 1)...].firstIndex(of: "]") else { return nil }
+                current += "''"; i = close + 1
+            case "-" where i + 1 < chars.count && chars[i + 1] == "-":
+                while i < chars.count, chars[i] != "\n" { i += 1 }
+            case "/" where i + 1 < chars.count && chars[i + 1] == "*":
+                var j = i + 2, closed = false
+                while j + 1 < chars.count { if chars[j] == "*" && chars[j + 1] == "/" { closed = true; break }; j += 1 }
+                guard closed else { return nil }
+                current += " "; i = j + 2
+            case ";":
+                statements.append(current); current = ""; i += 1
+            default:
+                current.append(c); i += 1
+            }
         }
-        return out
+        statements.append(current)
+        return statements.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
     }
 }
 

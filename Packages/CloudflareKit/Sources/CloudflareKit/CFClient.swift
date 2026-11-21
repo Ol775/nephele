@@ -176,7 +176,9 @@ public actor CFClient {
 
 /// Percent-encodes one URL path segment, including `/` and spaces, for names that come from users (KV keys, R2 objects).
 public func pathSegment(_ s: String) -> String {
-    s.addingPercentEncoding(withAllowedCharacters: CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")) ?? s
+    // `.` and `..` would be resolved as path navigation (a key named `..` would address its namespace), so encode the dots.
+    if s == "." || s == ".." { return s.replacingOccurrences(of: ".", with: "%2E") }
+    return s.addingPercentEncoding(withAllowedCharacters: CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")) ?? s
 }
 
 extension JSONDecoder.DateDecodingStrategy {

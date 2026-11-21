@@ -50,4 +50,20 @@ import CloudflareKitTesting
         #expect(stub.recorded.first?.request.httpMethod == "DELETE")
         #expect(stub.recorded.first?.request.url?.path == "/client/v4/accounts/acc1/d1/database/db-1")
     }
+
+    @Test func quotesCannotHideAWriteFromTheClassifier() {
+        for bad in ["SELECT '--'; DROP TABLE t", "SELECT 'it''s'; DROP TABLE t", "SELECT \"a--b\" FROM t; DELETE FROM t", "SELECT `x/*` FROM t; DROP TABLE t; --*/",
+                    "SELECT 'unclosed", "SELECT 1 /* unclosed; DROP TABLE t", "PRAGMA user_version(5)", "PRAGMA writable_schema", "SELECT [a FROM t; DROP TABLE t"] {
+            #expect(!D1SQL.isReadOnly(bad), "\(bad)")
+        }
+        for ok in ["SELECT 'a;b' FROM t", "SELECT 'delete me'", "SELECT [x;y] FROM t", "SELECT \"weird;name\" FROM t", "PRAGMA table_info(t)", "PRAGMA index_list(t)", "SELECT 'it''s'"] {
+            #expect(D1SQL.isReadOnly(ok), "\(ok)")
+        }
+    }
+
+    @Test func identifiersAreQuotedWithDoubledQuotes() {
+        #expect(D1SQL.quoteIdentifier("users") == "\"users\"")
+        #expect(D1SQL.quoteIdentifier("we\"ird; DROP TABLE t") == "\"we\"\"ird; DROP TABLE t\"")
+        #expect(D1SQL.isReadOnly("SELECT * FROM \(D1SQL.quoteIdentifier("we\"ird; DROP TABLE t")) LIMIT 100;"))
+    }
 }

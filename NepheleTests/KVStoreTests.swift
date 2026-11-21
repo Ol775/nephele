@@ -114,4 +114,13 @@ import CloudflareKitTesting
         #expect(store.formError?.contains("Workers KV Storage Edit") == true)
         #expect(store.keys.map(\.name) == ["a", "b"])
     }
+
+    @Test func dotKeyNamesAreRefusedBeforeAnyRequest() async throws {
+        let (store, stub) = try await make()
+        await store.select(store.namespaces.value?.first)
+        await store.addKey("..", value: "v")
+        #expect(store.formError != nil)
+        await store.addKey(".", value: "v")
+        #expect(writes(stub).isEmpty)
+    }
 }

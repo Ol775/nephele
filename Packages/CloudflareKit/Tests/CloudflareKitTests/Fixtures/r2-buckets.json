@@ -1,0 +1,1 @@
+{"success":true,"errors":[],"messages":[],"result":{"buckets":[{"name":"media","creation_date":"2026-05-01T10:00:00.000Z","location":"weur","storage_class":"Standard"},{"name":"backups","creation_date":"2026-06-01T10:00:00.000Z"}]}}

@@ -18,7 +18,7 @@ struct StorageView: View {
                 switch tab {
                 case .kv: KVView()
                 case .d1: D1View()
-                case .r2: ContentUnavailableView("R2", systemImage: "hammer", description: Text("Coming next."))
+                case .r2: R2View()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -155,7 +155,7 @@ struct D1View: View {
                 if !d1.tables.isEmpty {
                     Divider()
                     List(d1.tables, id: \.self) { t in
-                        Text(t).monospaced().onTapGesture { d1.sql = "SELECT * FROM \"\(t)\" LIMIT 100;" }
+                        Text(t).monospaced().onTapGesture { d1.sql = "SELECT * FROM \(D1SQL.quoteIdentifier(t)) LIMIT 100;" }
                     }.frame(maxHeight: 180)
                 }
                 Divider()
@@ -231,6 +231,81 @@ struct ResultGrid: View {
                     }
                 }
                 if result.rows.count > 500 { Text("Showing the first 500 rows.").font(.footnote).foregroundStyle(.secondary) }
+            }
+        }
+    }
+}
+
+struct R2View: View {
+    @Environment(StorageStore.self) private var storage
+    @State private var creating = false
+    @State private var newName = ""
+    @State private var deleting: R2Bucket?
+
+    var body: some View {
+        @Bindable var r2 = storage.r2
+        HSplitView {
+            VStack(spacing: 0) {
+                LoadStateView(state: r2.buckets, permission: "Workers R2 Storage Read", isEmpty: { $0.isEmpty },
+                              emptyTitle: "No buckets", emptyMessage: "Create one to start storing objects.", emptySymbol: "shippingbox",
+                              retry: { Task { await r2.load() } }) { list in
+                    List(list, selection: Binding(get: { r2.selected?.id }, set: { id in Task { await r2.select(list.first { $0.id == id }) } })) { b in
+                        VStack(alignment: .leading) { Text(b.name); if let l = b.location { Text(l).font(.footnote).foregroundStyle(.secondary) } }
+                            .tag(b.id).contextMenu { Button("Delete\u{2026}", role: .destructive) { deleting = b }.disabled(!r2.canWrite) }
+                    }
+                }
+                Divider()
+                HStack {
+                    Button("New", systemImage: "plus") { creating = true }.disabled(!r2.canWrite)
+                    if let b = r2.selected { Button("Delete", systemImage: "trash") { deleting = b }.disabled(!r2.canWrite) }
+                    Spacer()
+                }.padding(8)
+            }
+            .frame(minWidth: 200, idealWidth: 230, maxWidth: 300)
+            objects
+        }
+        .task { await r2.load() }
+        .sheet(item: $deleting) { b in
+            TypedConfirmSheet(title: "Delete \(b.name)?", message: "A bucket has to be empty before it can be deleted. This can't be undone. Type its name to confirm.",
+                              name: b.name, buttonLabel: "Delete bucket", error: r2.formError,
+                              onConfirm: { await r2.delete(b, typedName: $0) }, onDone: { if r2.formError == nil { deleting = nil } })
+        }
+        .alert("New bucket", isPresented: $creating) {
+            TextField("Name", text: $newName)
+            Button("Create") { Task { await r2.create(newName); newName = "" } }
+            Button("Cancel", role: .cancel) { newName = "" }
+        }
+        .confirmationDialog(r2.confirm.pending?.title(bucket: r2.selected?.name ?? "") ?? "",
+                            isPresented: Binding(get: { r2.confirm.pending != nil }, set: { if !$0 { r2.confirm.dialogDismissed() } }),
+                            presenting: r2.confirm.pending) { change in
+            Button("Delete object", role: .destructive) { Task { await r2.confirmChange(change) } }
+            Button("Cancel", role: .cancel) { r2.confirm.cancel() }
+        } message: { change in Text(change.message(bucket: r2.selected?.name ?? "")) }
+    }
+
+    private var objects: some View {
+        @Bindable var r2 = storage.r2
+        return VStack(spacing: 0) {
+            if r2.selected == nil {
+                ContentUnavailableView("Pick a bucket", systemImage: "shippingbox", description: Text("Its objects appear here."))
+            } else {
+                if !r2.canWrite { Label("Needs a token with Workers R2 Storage Edit", systemImage: "lock").foregroundStyle(.secondary).padding(8) }
+                if let error = r2.formError { Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.red).padding(8) }
+                TextField("Filter by prefix", text: $r2.prefix).textFieldStyle(.roundedBorder).padding(8)
+                    .onSubmit { Task { await r2.loadObjects(reset: true) } }
+                LoadStateView(state: r2.objectsState, permission: "Workers R2 Storage Read", retry: { Task { await r2.loadObjects(reset: true) } }) { _ in
+                    List(r2.objects) { o in
+                        HStack {
+                            Text(o.key).monospaced().lineLimit(1).truncationMode(.middle)
+                            Spacer()
+                            if let size = o.size { Text(ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)).foregroundStyle(.secondary) }
+                            Button { r2.requestDelete(o) } label: { Image(systemName: "trash") }
+                                .buttonStyle(.borderless).disabled(!r2.canWrite).accessibilityLabel("Delete \(o.key)")
+                        }
+                    }
+                    if r2.nextCursor != nil { Button("Load more") { Task { await r2.loadMore() } }.padding(8) }
+                }
+                Text("Uploading and downloading objects isn't built yet.").font(.footnote).foregroundStyle(.secondary).padding(8)
             }
         }
     }

@@ -1,0 +1,1 @@
+{"success":true,"errors":[],"messages":[],"result":[{"key":"img/a.png","size":2048,"etag":"abc","last_modified":"2026-11-01T09:30:00.000Z","storage_class":"Standard"},{"key":"img/b file.png","size":10}],"result_info":{"per_page":100,"cursor":"RC1","is_truncated":true}}
