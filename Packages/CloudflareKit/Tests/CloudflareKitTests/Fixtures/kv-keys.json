@@ -1,0 +1,1 @@
+{"success":true,"errors":[],"messages":[],"result":[{"name":"user:1","expiration":1900000000},{"name":"user:2"}],"result_info":{"count":2,"cursor":"CUR1"}}

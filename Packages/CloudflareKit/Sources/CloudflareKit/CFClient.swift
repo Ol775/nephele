@@ -106,7 +106,9 @@ public actor CFClient {
     // MARK: - Transport
 
     private func perform(_ method: String, _ path: String, query: [URLQueryItem], body: Data?, contentType: String = "application/json") async throws -> (Data, Int, [String: String]) {
-        var comps = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
+        var comps = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
+        // Callers pass paths already percent-encoded (see `pathSegment`), so slashes inside names survive.
+        comps.percentEncodedPath += path
         if !query.isEmpty { comps.queryItems = query }
         var request = URLRequest(url: comps.url!)
         request.httpMethod = method
@@ -170,6 +172,11 @@ public actor CFClient {
         if !(200..<300).contains(status) { throw CloudflareError.transport("HTTP \(status)") }
         return env
     }
+}
+
+/// Percent-encodes one URL path segment, including `/` and spaces, for names that come from users (KV keys, R2 objects).
+public func pathSegment(_ s: String) -> String {
+    s.addingPercentEncoding(withAllowedCharacters: CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")) ?? s
 }
 
 extension JSONDecoder.DateDecodingStrategy {

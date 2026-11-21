@@ -19,7 +19,7 @@ import CloudflareKitTesting
     nonisolated static let meters = "{\"data\":{\"viewer\":{\"accounts\":[{\"workersInvocationsAdaptive\":[{\"sum\":{\"requests\":62000}}],\"kvOperationsAdaptiveGroups\":[{\"sum\":{\"requests\":91000},\"dimensions\":{\"actionType\":\"read\"}}],\"d1AnalyticsAdaptiveGroups\":[{\"sum\":{\"rowsRead\":1200000,\"rowsWritten\":3000}}],\"r2StorageAdaptiveGroups\":[{\"max\":{\"payloadSize\":1500000000,\"metadataSize\":0},\"dimensions\":{\"bucketName\":\"media\",\"datetime\":\"2026-11-21T14:00:00Z\"}}]}]}},\"errors\":null}"
 
     struct World {
-        let session: Session, settings: SettingsStore, nav: Navigator, domains: DomainsStore, alerts: AlertsStore, usage: UsageStore, workers: WorkersStore
+        let session: Session, settings: SettingsStore, nav: Navigator, domains: DomainsStore, alerts: AlertsStore, usage: UsageStore, workers: WorkersStore, storage: StorageStore
     }
 
     func world() async throws -> World {
@@ -28,6 +28,7 @@ import CloudflareKitTesting
             if path.hasSuffix("/zones"), req.url?.query?.contains("per_page=50") == true { return TestAPI.reply(req, TestAPI.ok("[\(Self.zones)]")) }
             if path.contains("/dns_records") { return TestAPI.reply(req, TestAPI.ok(Self.dns)) }
             if path.hasSuffix("/workers/scripts") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"hello-api\",\"handlers\":[\"fetch\"]},{\"id\":\"cron-job\",\"handlers\":[\"scheduled\"]}]")) }
+            if path.hasSuffix("/kv/namespaces") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"ns1\",\"title\":\"CACHE\"},{\"id\":\"ns2\",\"title\":\"SESSIONS\"}]")) }
             if path.hasSuffix("/schedules") { return TestAPI.reply(req, TestAPI.ok("{\"schedules\":[{\"cron\":\"*/30 * * * *\"}]}")) }
             if path.hasSuffix("/alerting/v3/history") { return TestAPI.reply(req, TestAPI.ok(Self.history)) }
             if path.hasSuffix("/graphql") {
@@ -43,12 +44,12 @@ import CloudflareKitTesting
         let alerts = AlertsStore(session: session, defaults: defaults)
         let usage = UsageStore(session: session, domains: domains)
         await usage.load(); await alerts.load()
-        return World(session: session, settings: settings, nav: Navigator(), domains: domains, alerts: alerts, usage: usage, workers: WorkersStore(session: session))
+        return World(session: session, settings: settings, nav: Navigator(), domains: domains, alerts: alerts, usage: usage, workers: WorkersStore(session: session), storage: StorageStore(session: session))
     }
 
     func render<V: View>(_ name: String, _ view: V, _ w: World, size: CGSize = CGSize(width: 1100, height: 720)) throws -> Int {
         let root = view
-            .environment(w.settings).environment(w.session).environment(w.nav).environment(w.domains).environment(w.alerts).environment(w.usage).environment(w.workers)
+            .environment(w.settings).environment(w.session).environment(w.nav).environment(w.domains).environment(w.alerts).environment(w.usage).environment(w.workers).environment(w.storage)
             .environment(\.nepheleTheme, NepheleTheme(w.settings.settings))
             .frame(width: size.width, height: size.height)
         let host = NSHostingView(rootView: root)
@@ -119,6 +120,10 @@ import CloudflareKitTesting
         let ws = WorkersStore(session: w.session)
         #expect(try render("new-worker", NewWorkerSheet(workers: ws) { _ in }, w, size: CGSize(width: 460, height: 320)) > 3_000)
         #expect(try render("delete-worker", DeleteWorkerSheet(workers: ws, script: WorkerScript(id: "hello-api")) {}, w, size: CGSize(width: 460, height: 260)) > 3_000)
+    }
+    @Test func storageRenders() async throws {
+        let w = try await world(); await w.storage.kv.load()
+        #expect(try render("storage-kv", StorageView(), w) > 5_000)
     }
     @Test func alertsRenders() async throws {
         let w = try await world()

@@ -23,6 +23,7 @@ struct AppShell: View {
                 case .overview: OverviewView()
                 case .domains: DomainsView()
                 case .workers: WorkersView()
+                case .storage: StorageView()
                 case .alerts: AlertsView()
                 case .usage: UsageView()
                 case .appearance: AppearanceView()
