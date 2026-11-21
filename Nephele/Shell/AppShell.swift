@@ -2,13 +2,14 @@ import SwiftUI
 
 struct AppShell: View {
     @Environment(SettingsStore.self) private var store
-    @State private var selection: Route?
+    @Environment(Navigator.self) private var navigator
 
     var body: some View {
+        @Bindable var navigator = navigator
         let settings = store.settings
         let theme = NepheleTheme(settings)
         NavigationSplitView {
-            List(settings.visibleRoutes, selection: $selection) { route in
+            List(settings.visibleRoutes, selection: $navigator.selection) { route in
                 SidebarRow(route: route, iconsOnly: settings.sidebarIcons)
                     .tag(route)
             }
@@ -16,15 +17,20 @@ struct AppShell: View {
             .background(theme.tintSidebar ? theme.accent.opacity(0.06) : .clear)
             .navigationSplitViewColumnWidth(min: settings.sidebarIcons ? 64 : 180, ideal: settings.sidebarIcons ? 64 : 210, max: settings.sidebarIcons ? 64 : 260)
         } detail: {
-            let route = selection ?? settings.landing
-            Placeholder(route: route)
-                .navigationTitle(route.title)
+            let route = navigator.selection ?? settings.landing
+            Group {
+                switch route {
+                case .settings: SettingsView()
+                default: Placeholder(route: route)
+                }
+            }
+            .navigationTitle(route.title)
         }
         .tint(theme.accent)
         .environment(\.nepheleTheme, theme)
         .font(.system(size: theme.fontSize, design: theme.fontDesign))
         .preferredColorScheme(settings.theme == .system ? nil : (settings.theme == .dark ? .dark : .light))
-        .onAppear { selection = selection ?? settings.landing }
+        .onAppear { navigator.selection = navigator.selection ?? settings.landing }
     }
 }
 
