@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Nephele — Cloud cleft</title>
+  <desc id="desc">An upright, fully rounded cloud is cut by a rising seam: a compact emblem of passage and protection.</desc>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0.7" y2="1"><stop stop-color="#FBAD41"/><stop offset="1" stop-color="#E96B18"/></linearGradient>
+    <linearGradient id="gold" x1="0.2" y1="0" x2="0.8" y2="1"><stop stop-color="#FFF9EE"/><stop offset="1" stop-color="#F2EFEA"/></linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFFFFF" stop-opacity=".2"/><stop offset=".55" stop-color="#FFFFFF" stop-opacity=".03"/><stop offset="1" stop-color="#000000" stop-opacity=".12"/></linearGradient>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="215" fill="url(#tile)"/>
+  <rect x="34" y="34" width="956" height="956" rx="213" fill="none" stroke="url(#edge)" stroke-width="4"/>
+  <g fill="url(#gold)">
+    <path d="M478 246 C401 246 345 303 342 375 C261 383 212 440 212 512 C212 594 279 651 357 647 C371 722 430 766 498 766 C560 766 607 732 630 682 L487 588 L581 439 L483 493 L558 278 C534 257 508 246 478 246 Z"/>
+<path d="M609 305 L558 462 L644 417 L555 567 L668 641 C748 626 804 559 804 486 C804 405 739 345 665 345 C651 327 632 313 609 305 Z"/>
+  </g>
+</svg>

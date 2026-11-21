@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Nephele — Golden guardian</title>
+  <desc id="desc">A broad, open horn crown and tapered face turn the rescuing ram into a single architectural crest.</desc>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0.7" y2="1"><stop stop-color="#2E2824"/><stop offset="1" stop-color="#15110F"/></linearGradient>
+    <linearGradient id="gold" x1="0.2" y1="0" x2="0.8" y2="1"><stop stop-color="#FFC66B"/><stop offset="1" stop-color="#F6821F"/></linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFFFFF" stop-opacity=".2"/><stop offset=".55" stop-color="#FFFFFF" stop-opacity=".03"/><stop offset="1" stop-color="#000000" stop-opacity=".12"/></linearGradient>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="215" fill="url(#tile)"/>
+  <rect x="34" y="34" width="956" height="956" rx="213" fill="none" stroke="url(#edge)" stroke-width="4"/>
+  <g fill="url(#gold)">
+    <path d="M512 372 C451 284 361 260 280 300 C204 338 198 444 242 511 C277 564 335 587 393 566 L365 487 C335 498 308 487 295 463 C275 428 285 390 313 378 C350 362 390 388 416 427 L463 670 Q475 727 512 752 Q549 727 561 670 L608 427 C634 388 674 362 711 378 C739 390 749 428 729 463 C716 487 689 498 659 487 L631 566 C689 587 747 564 782 511 C826 444 820 338 744 300 C663 260 573 284 512 372 Z"/>
+<path d="M481 448 Q512 432 543 448 L512 650 Z" fill="#FFF1D5" opacity=".32"/>
+  </g>
+</svg>

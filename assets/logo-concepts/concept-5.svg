@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Nephele — Cloud-born</title>
+  <desc id="desc">A calm profile is carved from a cloud-shaped mantle, giving the goddess a recognisable cameo silhouette.</desc>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0.7" y2="1"><stop stop-color="#2E2824"/><stop offset="1" stop-color="#15110F"/></linearGradient>
+    <linearGradient id="gold" x1="0.2" y1="0" x2="0.8" y2="1"><stop stop-color="#FFC66B"/><stop offset="1" stop-color="#F6821F"/></linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFFFFF" stop-opacity=".2"/><stop offset=".55" stop-color="#FFFFFF" stop-opacity=".03"/><stop offset="1" stop-color="#000000" stop-opacity=".12"/></linearGradient>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="215" fill="url(#tile)"/>
+  <rect x="34" y="34" width="956" height="956" rx="213" fill="none" stroke="url(#edge)" stroke-width="4"/>
+  <g fill="url(#gold)">
+    <path d="M631 276 C566 234 481 246 436 298 C371 280 311 314 299 377 C238 401 218 468 247 524 C219 587 250 652 310 674 C316 741 374 780 437 763 C479 792 534 789 570 767 L652 707 C590 697 552 665 551 623 L551 608 L605 608 Q633 608 637 580 L643 546 L680 533 Q694 528 684 513 L639 454 C651 405 641 363 613 337 L682 337 C678 311 658 288 631 276 Z"/>
+<path d="M385 374 C408 344 450 335 483 350" fill="none" stroke="#FFF1D5" stroke-width="24" stroke-linecap="round" opacity=".32"/>
+  </g>
+</svg>

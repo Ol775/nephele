@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Nephele — Folded fleece</title>
+  <desc id="desc">A compact fleece with a single turned corner brings the golden rescue story into a quiet material symbol.</desc>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0.7" y2="1"><stop stop-color="#FAF7F1"/><stop offset="1" stop-color="#E6DED3"/></linearGradient>
+    <linearGradient id="gold" x1="0.2" y1="0" x2="0.8" y2="1"><stop stop-color="#FFC66B"/><stop offset="1" stop-color="#F6821F"/></linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFFFFF" stop-opacity=".2"/><stop offset=".55" stop-color="#FFFFFF" stop-opacity=".03"/><stop offset="1" stop-color="#000000" stop-opacity=".12"/></linearGradient>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="215" fill="url(#tile)"/>
+  <rect x="34" y="34" width="956" height="956" rx="213" fill="none" stroke="url(#edge)" stroke-width="4"/>
+  <g fill="url(#gold)">
+    <path d="M512 247 C548 247 575 269 590 297 C627 279 670 287 694 316 C718 344 719 379 704 410 C749 428 772 466 761 506 C753 537 732 558 705 570 C718 605 708 644 677 666 C649 686 617 686 588 672 C574 717 547 750 512 774 C477 750 450 717 436 672 C407 686 375 686 347 666 C316 644 306 605 319 570 C292 558 271 537 263 506 C252 466 275 428 320 410 C305 379 306 344 330 316 C354 287 397 279 434 297 C449 269 476 247 512 247 Z"/>
+<path d="M512 367 C447 367 403 410 403 467 C403 527 446 565 504 565 L548 565 L512 649 L627 526 L501 526 C467 526 445 503 445 472 C445 439 470 416 503 416 C530 416 550 433 554 456 L606 456 C601 404 565 367 512 367 Z" fill="#F2EFEA"/>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Nephele — Fleece initial</title>
+  <desc id="desc">A diagonal N grows into a rounded fleece terminal, making the letter and myth share one continuous outline.</desc>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0.7" y2="1"><stop stop-color="#2E2824"/><stop offset="1" stop-color="#15110F"/></linearGradient>
+    <linearGradient id="gold" x1="0.2" y1="0" x2="0.8" y2="1"><stop stop-color="#FFC66B"/><stop offset="1" stop-color="#F6821F"/></linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFFFFF" stop-opacity=".2"/><stop offset=".55" stop-color="#FFFFFF" stop-opacity=".03"/><stop offset="1" stop-color="#000000" stop-opacity=".12"/></linearGradient>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="215" fill="url(#tile)"/>
+  <rect x="34" y="34" width="956" height="956" rx="213" fill="none" stroke="url(#edge)" stroke-width="4"/>
+  <g fill="url(#gold)">
+    <path d="M270 726 L270 405 C270 317 322 267 395 267 C449 267 488 298 512 343 L645 586 L645 391 C645 365 629 349 609 349 C590 349 579 360 579 378 C579 389 583 398 591 405 L535 456 C510 435 497 407 497 376 C497 311 546 267 610 267 C681 267 744 313 744 395 L744 726 L643 726 L369 405 L369 726 Z"/>
+<path d="M369 405 L643 726 L643 651 L399 366 Q384 353 369 366 Z" fill="#FFF1D5" opacity=".17"/>
+  </g>
+</svg>
