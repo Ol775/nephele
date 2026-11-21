@@ -4,6 +4,7 @@ import CloudflareKit
 struct OverviewView: View {
     @Environment(DomainsStore.self) private var domains
     @Environment(AlertsStore.self) private var alerts
+    @Environment(UsageStore.self) private var usage
     @Environment(SettingsStore.self) private var settings
     @Environment(Navigator.self) private var navigator
     @Environment(\.nepheleTheme) private var theme
@@ -12,40 +13,49 @@ struct OverviewView: View {
         let sections = settings.settings.overview
         ScrollView {
             VStack(alignment: .leading, spacing: theme.pad) {
-                if !(sections.stats || sections.domains) {
+                if !(sections.stats || sections.chart || sections.alerts || sections.domains) {
                     EmptyStateView(title: "Nothing to show", message: "Every Overview section is hidden. Turn them back on in Appearance.", symbol: "square.grid.2x2")
                 }
-                LoadStateView(state: domains.zones, permission: "Zone Read", isEmpty: { $0.isEmpty },
-                              emptyTitle: "No domains yet", emptyMessage: "Add a domain to Cloudflare and it shows up here.", emptySymbol: "globe",
-                              retry: { Task { await domains.load(force: true) } }) { zones in
-                    if sections.stats { stats(zones) }
-                    if sections.alerts { attentionList }
-                    if sections.domains { domainList(zones) }
-                }
+                if sections.stats || sections.chart { HStack { Spacer(); RangePicker(usage: usage) } }
+                if sections.stats { stats }
+                if sections.chart { chart }
+                if sections.alerts { attentionList }
+                if sections.domains { domainsSection }
             }
             .padding(theme.pad)
         }
-        .task { await domains.load(); await alerts.load() }
+        .task { await domains.load(); await usage.load(); await alerts.load() }
     }
 
-    private func stats(_ zones: [Zone]) -> some View {
-        let attention = zones.filter { !$0.isActive }.count
+    private var stats: some View {
+        let summary = usage.traffic.value
+        let missing = usage.traffic.failure != nil ? "Needs Analytics Read" : nil
         return HStack(spacing: 0) {
-            MetricTile(label: "Domains", value: "\(zones.count)", caption: "\(zones.filter(\.isActive).count) active", emphasized: true)
+            MetricTile(label: "Requests, \(usage.range.rawValue)", value: summary.map { $0.totalRequests.compact } ?? "\u{2014}", caption: missing, emphasized: true)
             Divider()
-            MetricTile(label: "Needs attention", value: "\(attention)", caption: attention == 0 ? "All domains active" : "Pending or paused")
+            MetricTile(label: "Cache hit ratio", value: summary.map { $0.cacheHitRatio.formatted(.percent.precision(.fractionLength(0))) } ?? "\u{2014}")
+            Divider()
+            MetricTile(label: "Threats blocked", value: summary.map { $0.threats.compact } ?? "\u{2014}")
             Divider()
             MetricTile(label: "Open alerts", value: "\(alerts.openCount)", caption: alerts.openCount == 0 ? "All clear" : "Waiting for you")
         }
-        .background(.background.secondary, in: RoundedRectangle(cornerRadius: theme.radius))
-        .overlay(RoundedRectangle(cornerRadius: theme.radius).stroke(.quaternary))
+        .card(theme)
+    }
+
+    private var chart: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Requests").font(.headline).padding([.top, .horizontal], theme.pad)
+            LoadStateView(state: usage.traffic, permission: "Account Analytics Read", isEmpty: { $0.points.isEmpty },
+                          emptyTitle: "No traffic yet", emptyMessage: "Requests to your domains appear here.", emptySymbol: "chart.xyaxis.line",
+                          retry: { Task { await usage.load(force: true) } }) { AreaChart(points: $0.points).padding([.horizontal, .bottom], theme.pad) }
+        }
+        .card(theme)
     }
 
     private var attentionList: some View {
         let open = (alerts.events.value ?? []).filter { !alerts.acknowledged.contains($0.id) }
         return VStack(alignment: .leading, spacing: 0) {
-            HStack { Text("Needs attention").font(.headline); Spacer(); Button("All alerts") { navigator.selection = .alerts }.buttonStyle(.link) }
-                .padding(theme.pad)
+            HStack { Text("Needs attention").font(.headline); Spacer(); Button("All alerts") { navigator.selection = .alerts }.buttonStyle(.link) }.padding(theme.pad)
             Divider()
             if open.isEmpty {
                 Text("You're all clear.").foregroundStyle(.secondary).padding(theme.pad)
@@ -57,21 +67,22 @@ struct OverviewView: View {
                 }
             }
         }
-        .background(.background.secondary, in: RoundedRectangle(cornerRadius: theme.radius))
-        .overlay(RoundedRectangle(cornerRadius: theme.radius).stroke(.quaternary))
+        .card(theme)
     }
 
-    private func domainList(_ zones: [Zone]) -> some View {
+    private var domainsSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack { Text("Domains").font(.headline); Spacer(); Button("All domains") { navigator.selection = .domains }.buttonStyle(.link) }
-                .padding(theme.pad)
+            HStack { Text("Domains").font(.headline); Spacer(); Button("All domains") { navigator.selection = .domains }.buttonStyle(.link) }.padding(theme.pad)
             Divider()
-            ForEach(zones) { zone in
-                DomainRow(zone: zone).padding(.horizontal, theme.pad).padding(.vertical, theme.rowPad / 2)
-                Divider()
+            LoadStateView(state: domains.zones, permission: "Zone Read", isEmpty: { $0.isEmpty },
+                          emptyTitle: "No domains yet", emptyMessage: "Add a domain to Cloudflare and it shows up here.", emptySymbol: "globe",
+                          retry: { Task { await domains.load(force: true) } }) { zones in
+                ForEach(zones) { zone in
+                    DomainRow(zone: zone).padding(.horizontal, theme.pad).padding(.vertical, theme.rowPad / 2)
+                    Divider()
+                }
             }
         }
-        .background(.background.secondary, in: RoundedRectangle(cornerRadius: theme.radius))
-        .overlay(RoundedRectangle(cornerRadius: theme.radius).stroke(.quaternary))
+        .card(theme)
     }
 }

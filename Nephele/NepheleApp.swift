@@ -5,6 +5,7 @@ struct NepheleApp: App {
     @State private var session: Session
     @State private var domains: DomainsStore
     @State private var alerts: AlertsStore
+    @State private var usage: UsageStore
     @State private var poller: AlertPoller
     @State private var settings = SettingsStore()
     @State private var navigator = Navigator()
@@ -15,7 +16,9 @@ struct NepheleApp: App {
         let settings = SettingsStore()
         let alerts = AlertsStore(session: session)
         _settings = State(initialValue: settings)
-        _domains = State(initialValue: DomainsStore(session: session))
+        let domains = DomainsStore(session: session)
+        _domains = State(initialValue: domains)
+        _usage = State(initialValue: UsageStore(session: session, domains: domains))
         _alerts = State(initialValue: alerts)
         _poller = State(initialValue: AlertPoller(store: alerts, session: session, settings: settings))
     }
@@ -30,6 +33,7 @@ struct NepheleApp: App {
             .environment(navigator)
             .environment(domains)
             .environment(alerts)
+            .environment(usage)
             .environment(\.nepheleTheme, NepheleTheme(settings.settings))
             .frame(minWidth: 860, minHeight: 560)
             .task { await session.restore() }

@@ -23,6 +23,7 @@ struct AppShell: View {
                 case .overview: OverviewView()
                 case .domains: DomainsView()
                 case .alerts: AlertsView()
+                case .usage: UsageView()
                 case .settings: SettingsView()
                 default: Placeholder(route: route)
                 }
