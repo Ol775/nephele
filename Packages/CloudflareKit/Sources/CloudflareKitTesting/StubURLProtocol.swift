@@ -1,26 +1,46 @@
 import Foundation
 
-/// URLProtocol stub shared by the Kit and app test targets.
-/// The handler is global state: suites that use it must be `.serialized`.
-public final class StubURLProtocol: URLProtocol, @unchecked Sendable {
+/// A stubbed network for tests. Each `StubServer` owns its own URLSession and handler,
+/// so tests that use different servers can run in parallel.
+public final class StubServer: @unchecked Sendable {
     public typealias Handler = @Sendable (URLRequest) throws -> (HTTPURLResponse, Data)
     public struct Recorded: Sendable { public let request: URLRequest; public let body: Data? }
 
-    private static let lock = NSLock()
-    nonisolated(unsafe) private static var _handler: Handler?
-    nonisolated(unsafe) private static var _recorded: [Recorded] = []
+    public let id = UUID().uuidString
+    public private(set) lazy var session: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubURLProtocol.self]
+        config.httpAdditionalHeaders = [StubURLProtocol.header: id]
+        return URLSession(configuration: config)
+    }()
 
-    public static var handler: Handler? {
+    private let lock = NSLock()
+    private var _handler: Handler?
+    private var _recorded: [Recorded] = []
+
+    public init(_ handler: Handler? = nil) {
+        _handler = handler
+        StubURLProtocol.register(self)
+    }
+    deinit { StubURLProtocol.unregister(id) }
+
+    public var handler: Handler? {
         get { lock.withLock { _handler } }
         set { lock.withLock { _handler = newValue } }
     }
-    public static var recorded: [Recorded] { lock.withLock { _recorded } }
-    public static func reset() { lock.withLock { _handler = nil; _recorded = [] } }
+    public var recorded: [Recorded] { lock.withLock { _recorded } }
+    func record(_ r: Recorded) { lock.withLock { _recorded.append(r) } }
+}
 
-    public static func session() -> URLSession {
-        let config = URLSessionConfiguration.ephemeral
-        config.protocolClasses = [StubURLProtocol.self]
-        return URLSession(configuration: config)
+public final class StubURLProtocol: URLProtocol, @unchecked Sendable {
+    static let header = "X-Stub-ID"
+    private static let lock = NSLock()
+    nonisolated(unsafe) private static var servers: [String: Unmanaged<StubServer>] = [:]
+
+    static func register(_ s: StubServer) { lock.withLock { servers[s.id] = Unmanaged.passUnretained(s) } }
+    static func unregister(_ id: String) { lock.withLock { servers[id] = nil } }
+    private static func server(for id: String?) -> StubServer? {
+        lock.withLock { id.flatMap { servers[$0]?.takeUnretainedValue() } }
     }
 
     public static func response(_ url: URL, status: Int = 200, headers: [String: String] = [:]) -> HTTPURLResponse {
@@ -44,8 +64,12 @@ public final class StubURLProtocol: URLProtocol, @unchecked Sendable {
             stream.close()
             body = data
         }
-        Self.lock.withLock { Self._recorded.append(Recorded(request: request, body: body)) }
-        guard let handler = Self.handler else {
+        guard let server = Self.server(for: request.value(forHTTPHeaderField: Self.header)) else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
+            return
+        }
+        server.record(.init(request: request, body: body))
+        guard let handler = server.handler else {
             client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
             return
         }
