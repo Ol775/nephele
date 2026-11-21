@@ -6,6 +6,12 @@ struct AreaChart: View {
     let points: [TrafficPoint]
     @Environment(\.nepheleTheme) private var theme
 
+    /// Under two days of data the labels show hours; longer ranges show dates.
+    private var shortSpan: Bool {
+        guard let first = points.first?.date, let last = points.last?.date else { return true }
+        return last.timeIntervalSince(first) < 2 * 86_400
+    }
+
     var body: some View {
         Chart(points, id: \.date) { point in
             AreaMark(x: .value("Time", point.date), y: .value("Requests", point.requests))
@@ -14,7 +20,11 @@ struct AreaChart: View {
                 .foregroundStyle(theme.accent).lineStyle(StrokeStyle(lineWidth: 2, lineJoin: .round))
         }
         .chartYAxis { AxisMarks(position: .leading) { _ in AxisGridLine(); AxisValueLabel() } }
-        .chartXAxis { AxisMarks { _ in AxisValueLabel(format: .dateTime.month(.abbreviated).day().hour()) } }
+        .chartXAxis {
+            AxisMarks { _ in
+                if shortSpan { AxisValueLabel(format: .dateTime.hour()) } else { AxisValueLabel(format: .dateTime.month(.abbreviated).day()) }
+            }
+        }
         .frame(height: 170)
         .accessibilityLabel("Requests over time")
     }

@@ -24,6 +24,7 @@ struct AppShell: View {
                 case .domains: DomainsView()
                 case .alerts: AlertsView()
                 case .usage: UsageView()
+                case .appearance: AppearanceView()
                 case .settings: SettingsView()
                 default: Placeholder(route: route)
                 }
@@ -34,6 +35,8 @@ struct AppShell: View {
         .environment(\.nepheleTheme, theme)
         .font(.system(size: theme.fontSize, design: theme.fontDesign))
         .preferredColorScheme(settings.theme == .system ? nil : (settings.theme == .dark ? .dark : .light))
+        .transaction { if settings.reduceMotion { $0.animation = nil } }
+        .modifier(ContrastModifier(enabled: settings.highContrast))
         .onAppear { navigator.selection = navigator.selection ?? settings.landing }
     }
 }
@@ -56,5 +59,12 @@ private struct Placeholder: View {
     let route: Route
     var body: some View {
         ContentUnavailableView(route.title, systemImage: route.symbol, description: Text("Coming together in the next tasks."))
+    }
+}
+
+private struct ContrastModifier: ViewModifier {
+    let enabled: Bool
+    @ViewBuilder func body(content: Content) -> some View {
+        if enabled { content.foregroundStyle(.primary, .primary, .primary) } else { content }
     }
 }

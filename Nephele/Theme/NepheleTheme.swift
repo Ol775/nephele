@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct NepheleTheme: Sendable {
     let accent: Color
@@ -49,4 +50,13 @@ extension Color {
 
 extension EnvironmentValues {
     @Entry var nepheleTheme = NepheleTheme(AppSettings())
+}
+
+extension Color {
+    /// "#RRGGBB" in sRGB, used to store a picked accent colour.
+    var hexString: String {
+        let c = NSColor(self).usingColorSpace(.sRGB) ?? .orange
+        func byte(_ v: CGFloat) -> Int { Int((min(max(v, 0), 1) * 255).rounded()) }
+        return String(format: "#%02X%02X%02X", byte(c.redComponent), byte(c.greenComponent), byte(c.blueComponent))
+    }
 }

@@ -38,4 +38,9 @@ import SwiftUI
         s.nav = [NavEntry(id: .usage, visible: true), NavEntry(id: .domains, visible: false), NavEntry(id: .overview, visible: true), NavEntry(id: .alerts, visible: true), NavEntry(id: .appearance, visible: true), NavEntry(id: .settings, visible: true)]
         #expect(s.visibleRoutes == [.usage, .overview, .alerts, .appearance, .settings])
     }
+
+    @Test func hexColourRoundTrips() {
+        #expect(Color(hex: "#2F7DE1").hexString == "#2F7DE1")
+        #expect(Color(hex: "#F6821F").hexString == "#F6821F")
+    }
 }
