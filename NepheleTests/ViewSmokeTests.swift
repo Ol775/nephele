@@ -85,7 +85,7 @@ import CloudflareKitTesting
     }
     @Test func workerDetailRenders() async throws {
         let w = try await world()
-        #expect(try render("worker-detail", NavigationStack { WorkerDetailView(script: WorkerScript(id: "hello-api", compatibilityDate: "2026-10-01"), session: w.session) }, w) > 5_000)
+        #expect(try render("worker-detail", NavigationStack { WorkerDetailView(script: WorkerScript(id: "hello-api", compatibilityDate: "2026-10-01")) }, w) > 5_000)
     }
     @Test func workerSettingsRenders() async throws {
         let w = try await world()
@@ -104,6 +104,11 @@ import CloudflareKitTesting
         let store = WorkerStore(script: WorkerScript(id: "hello-api"), session: w.session)
         await store.loadVersions()
         #expect(try render("worker-versions", WorkerVersionsView(store: store), w) > 5_000)
+    }
+    @Test func workerCodeRenders() async throws {
+        let w = try await world()
+        let store = WorkerStore(script: WorkerScript(id: "hello-api"), session: w.session)
+        #expect(try render("worker-code", WorkerCodeView(store: store), w) > 5_000)
     }
     @Test func alertsRenders() async throws {
         let w = try await world()

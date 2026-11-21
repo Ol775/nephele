@@ -7,10 +7,11 @@ enum WorkerTab: String, CaseIterable, Identifiable {
 }
 
 struct WorkerDetailView: View {
-    @State private var store: WorkerStore
+    @Environment(WorkersStore.self) private var workers
+    let script: WorkerScript
     @State private var tab = WorkerTab.overview
 
-    init(script: WorkerScript, session: Session) { _store = State(initialValue: WorkerStore(script: script, session: session)) }
+    private var store: WorkerStore { workers.detail(for: script) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -25,6 +26,7 @@ struct WorkerDetailView: View {
                 case .settings: WorkerSettingsView(store: store)
                 case .triggers: WorkerTriggersView(store: store)
                 case .versions: WorkerVersionsView(store: store)
+                case .code: WorkerCodeView(store: store)
                 default: ContentUnavailableView(tab.rawValue, systemImage: "hammer", description: Text("Coming next."))
                 }
             }

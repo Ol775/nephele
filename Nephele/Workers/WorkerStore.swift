@@ -16,6 +16,10 @@ final class WorkerStore {
     var triggers: LoadState<WorkerTriggers> = .idle
     var versions: LoadState<[WorkerVersion]> = .idle
     var deployments: LoadState<[WorkerDeployment]> = .idle
+    var code: LoadState<WorkerCode> = .idle
+    var draft = ""
+    var loadedText: String?
+    var lastSavedVersionID: String?
     let confirm = ConfirmGate<WorkerChange>()
 
     @ObservationIgnored let session: Session

@@ -3,7 +3,6 @@ import CloudflareKit
 
 struct WorkersView: View {
     @Environment(WorkersStore.self) private var workers
-    @Environment(Session.self) private var session
     @State private var query = ""
 
     var body: some View {
@@ -22,7 +21,7 @@ struct WorkersView: View {
             }
             .searchable(text: $query, prompt: "Filter Workers")
             .toolbar { ToolbarItem { Button("Refresh", systemImage: "arrow.clockwise") { Task { await workers.load(force: true) } } } }
-            .navigationDestination(for: WorkerScript.self) { WorkerDetailView(script: $0, session: session) }
+            .navigationDestination(for: WorkerScript.self) { WorkerDetailView(script: $0) }
         }
         .task { await workers.load() }
     }

@@ -61,3 +61,16 @@ import CloudflareKitTesting
         #expect(store.canWrite == false)
     }
 }
+
+@MainActor
+@Suite struct WorkerDetailCacheTests {
+    @Test func theSameWorkerKeepsItsStoreAndDraftUntilReset() async throws {
+        let stub = StubServer { req in TestAPI.base(req) }
+        let workers = WorkersStore(session: try await TestAPI.readySession(stub))
+        let a = workers.detail(for: WorkerScript(id: "x"))
+        a.draft = "unsaved"
+        #expect(workers.detail(for: WorkerScript(id: "x")).draft == "unsaved")
+        workers.reset()
+        #expect(workers.detail(for: WorkerScript(id: "x")).draft == "")
+    }
+}
