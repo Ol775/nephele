@@ -46,7 +46,7 @@ extension CFClient {
             ("Workers R2 Storage", "/accounts/\(accountID)/r2/buckets"),
             ("Access: Apps and Policies", "/accounts/\(accountID)/access/apps"),
             ("Cloudflare Tunnel", "/accounts/\(accountID)/cfd_tunnel"),
-            ("Account Analytics", "/accounts/\(accountID)/alerting/v3/policies"),
+            ("Notifications", "/accounts/\(accountID)/alerting/v3/policies"),
         ]
         var granted = [Bool](repeating: false, count: probes.count)
         await withTaskGroup(of: (Int, Bool).self) { group in

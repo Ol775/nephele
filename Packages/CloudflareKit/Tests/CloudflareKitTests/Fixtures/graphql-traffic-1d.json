@@ -1,0 +1,8 @@
+{"data":{"viewer":{"zones":[
+ {"httpRequests1dGroups":[
+  {"dimensions":{"date":"2026-11-19"},"sum":{"requests":100,"cachedRequests":60,"threats":2}},
+  {"dimensions":{"date":"2026-11-20"},"sum":{"requests":200,"cachedRequests":100,"threats":3}}]},
+ {"httpRequests1dGroups":[
+  {"dimensions":{"date":"2026-11-19"},"sum":{"requests":50,"cachedRequests":10,"threats":0}},
+  {"dimensions":{"date":"2026-11-20"},"sum":{"requests":25,"cachedRequests":5,"threats":1}}]}
+]}},"errors":null}

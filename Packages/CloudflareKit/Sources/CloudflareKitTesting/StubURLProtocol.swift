@@ -74,7 +74,10 @@ public final class StubURLProtocol: URLProtocol, @unchecked Sendable {
             return
         }
         do {
-            let (response, data) = try handler(request)
+            var forHandler = request
+            forHandler.httpBodyStream = nil
+            forHandler.httpBody = body
+            let (response, data) = try handler(forHandler)
             client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
             client?.urlProtocol(self, didLoad: data)
             client?.urlProtocolDidFinishLoading(self)
