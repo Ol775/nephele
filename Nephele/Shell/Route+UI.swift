@@ -5,6 +5,7 @@ extension Route {
         switch self {
         case .overview: "Overview"
         case .domains: "Domains"
+        case .workers: "Workers"
         case .alerts: "Alerts"
         case .usage: "Usage"
         case .appearance: "Appearance"
@@ -16,6 +17,7 @@ extension Route {
         switch self {
         case .overview: "square.grid.2x2"
         case .domains: "globe"
+        case .workers: "curlybraces"
         case .alerts: "bell"
         case .usage: "chart.bar"
         case .appearance: "slider.horizontal.3"

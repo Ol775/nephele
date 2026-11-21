@@ -1,0 +1,60 @@
+import SwiftUI
+import CloudflareKit
+
+enum WorkerTab: String, CaseIterable, Identifiable {
+    case overview = "Overview", settings = "Settings", triggers = "Triggers", versions = "Versions", code = "Code", logs = "Logs"
+    var id: String { rawValue }
+}
+
+struct WorkerDetailView: View {
+    @State private var store: WorkerStore
+    @State private var tab = WorkerTab.overview
+
+    init(script: WorkerScript, session: Session) { _store = State(initialValue: WorkerStore(script: script, session: session)) }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Picker("Section", selection: $tab) {
+                ForEach(WorkerTab.allCases) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.segmented).labelsHidden().padding()
+            Divider()
+            Group {
+                switch tab {
+                case .overview: WorkerOverviewView(store: store)
+                default: ContentUnavailableView(tab.rawValue, systemImage: "hammer", description: Text("Coming next."))
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .navigationTitle(store.script.id)
+        .task { await store.load() }
+    }
+}
+
+struct WorkerOverviewView: View {
+    let store: WorkerStore
+
+    var body: some View {
+        Form {
+            Section("Worker") {
+                LabeledContent("Name", value: store.script.id)
+                if let date = store.script.compatibilityDate { LabeledContent("Compatibility date", value: date) }
+                if let modified = store.script.modifiedOn { LabeledContent("Last updated", value: modified.formatted(date: .abbreviated, time: .shortened)) }
+            }
+            Section("Live deployment") {
+                LoadStateView(state: store.latestDeployment, permission: "Workers Scripts Read",
+                              retry: { Task { await store.load() } }) { deployment in
+                    if let deployment {
+                        LabeledContent("Version", value: String(deployment.versions.first?.versionId.prefix(8) ?? "none")).monospaced()
+                        LabeledContent("Deployed", value: deployment.createdOn.formatted(date: .abbreviated, time: .shortened))
+                        if let message = deployment.message { LabeledContent("Message", value: message) }
+                    } else {
+                        Text("Nothing is deployed yet.").foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+    }
+}

@@ -22,6 +22,7 @@ struct AppShell: View {
                 switch route {
                 case .overview: OverviewView()
                 case .domains: DomainsView()
+                case .workers: WorkersView()
                 case .alerts: AlertsView()
                 case .usage: UsageView()
                 case .appearance: AppearanceView()
