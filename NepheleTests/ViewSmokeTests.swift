@@ -110,6 +110,10 @@ import CloudflareKitTesting
         let store = WorkerStore(script: WorkerScript(id: "hello-api"), session: w.session)
         #expect(try render("worker-code", WorkerCodeView(store: store), w) > 5_000)
     }
+    @Test func workerLogsRenders() async throws {
+        let w = try await world()
+        #expect(try render("worker-logs", WorkerLogsView(script: "hello-api", session: w.session), w) > 5_000)
+    }
     @Test func alertsRenders() async throws {
         let w = try await world()
         #expect(try render("alerts", AlertsView(), w) > 5_000)

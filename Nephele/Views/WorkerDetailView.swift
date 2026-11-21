@@ -27,6 +27,7 @@ struct WorkerDetailView: View {
                 case .triggers: WorkerTriggersView(store: store)
                 case .versions: WorkerVersionsView(store: store)
                 case .code: WorkerCodeView(store: store)
+                case .logs: WorkerLogsView(script: script.id, session: store.session)
                 default: ContentUnavailableView(tab.rawValue, systemImage: "hammer", description: Text("Coming next."))
                 }
             }

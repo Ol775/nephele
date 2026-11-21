@@ -1,0 +1,1 @@
+{"outcome":"ok","scriptName":"hello-api","exceptions":[],"logs":[{"message":["hello",{"a":1}],"level":"log","timestamp":1763463602349}],"eventTimestamp":1763463602349,"event":{"request":{"url":"https://api.example.dev/x","method":"GET","headers":{}}}}
