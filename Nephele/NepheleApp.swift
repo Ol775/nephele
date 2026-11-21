@@ -2,15 +2,22 @@ import SwiftUI
 
 @main
 struct NepheleApp: App {
-    @State private var settings = SettingsStore()
     @State private var session: Session
     @State private var domains: DomainsStore
+    @State private var alerts: AlertsStore
+    @State private var poller: AlertPoller
+    @State private var settings = SettingsStore()
     @State private var navigator = Navigator()
 
     init() {
         let session = Session()
         _session = State(initialValue: session)
+        let settings = SettingsStore()
+        let alerts = AlertsStore(session: session)
+        _settings = State(initialValue: settings)
         _domains = State(initialValue: DomainsStore(session: session))
+        _alerts = State(initialValue: alerts)
+        _poller = State(initialValue: AlertPoller(store: alerts, session: session, settings: settings))
     }
 
     var body: some Scene {
@@ -22,9 +29,11 @@ struct NepheleApp: App {
             .environment(session)
             .environment(navigator)
             .environment(domains)
+            .environment(alerts)
             .environment(\.nepheleTheme, NepheleTheme(settings.settings))
             .frame(minWidth: 860, minHeight: 560)
             .task { await session.restore() }
+            .task(id: session.state) { if session.state == .ready { poller.start() } else { poller.stop() } }
         }
         .commands {
             CommandGroup(replacing: .appSettings) {
@@ -33,6 +42,10 @@ struct NepheleApp: App {
             CommandGroup(after: .textEditing) {
                 Button("Search domains") { navigator.searchDomains() }.keyboardShortcut("k", modifiers: .command)
             }
+        }
+        MenuBarExtra("Nephele", systemImage: "cloud", isInserted: settings.binding(\.showMenuBar)) {
+            MenuBarContent()
+                .environment(alerts).environment(domains).environment(navigator)
         }
     }
 }
