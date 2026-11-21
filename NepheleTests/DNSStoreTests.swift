@@ -111,7 +111,7 @@ import CloudflareKitTesting
         let store = DNSStore(zone: TestAPI.zone, session: try await TestAPI.readySession(stub))
         await store.load()
         let record = try #require(store.records.value?.first)
-        await store.update(record, with: DNSRecordDraft(type: "A", name: "EXAMPLE.dev", content: "192.0.2.99", proxied: true, ttl: 300))
+        await store.update(record, with: DNSRecordDraft(type: "A", name: "EXAMPLE.dev", content: "192.0.2.99", proxied: false, ttl: 300))
         #expect(count(stub, "PATCH") == 1)
         let sent = try #require(stub.recorded.last { $0.request.httpMethod == "PATCH" })
         let raw = try #require(sent.body)
