@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Zone: Decodable, Sendable, Identifiable, Equatable {
+public struct Zone: Decodable, Sendable, Identifiable, Equatable, Hashable {
     public let id: String
     public let name: String
     public let status: String

@@ -1,8 +1,6 @@
 import SwiftUI
 import ServiceManagement
 
-extension Notification.Name { static let nepheleClearCache = Notification.Name("nephele.clearCache") }
-
 struct SettingsView: View {
     @Environment(Session.self) private var session
     @Environment(SettingsStore.self) private var store
@@ -57,7 +55,7 @@ struct SettingsView: View {
             }
             Section("Data and privacy") {
                 HStack {
-                    Button("Clear cache") { NotificationCenter.default.post(name: .nepheleClearCache, object: nil); cacheCleared = true }
+                    Button("Clear cache") { session.clearCache(); cacheCleared = true }
                     if cacheCleared { Text("Cache cleared.").foregroundStyle(.secondary) }
                 }
                 Text("Results are kept in memory for about a minute and never written to disk. Nephele collects no analytics and talks only to the Cloudflare API.")

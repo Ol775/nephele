@@ -20,6 +20,8 @@ struct AppShell: View {
             let route = navigator.selection ?? settings.landing
             Group {
                 switch route {
+                case .overview: OverviewView()
+                case .domains: DomainsView()
                 case .settings: SettingsView()
                 default: Placeholder(route: route)
                 }

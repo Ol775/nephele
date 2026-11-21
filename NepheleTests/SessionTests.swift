@@ -9,21 +9,8 @@ import CloudflareKitTesting
     let goodToken = String(repeating: "a", count: 40)
 
     func tokenStore() -> TokenStore { TokenStore(service: "io.github.ol775.nephele.tests.\(UUID().uuidString)") }
-    nonisolated static func ok(_ result: String) -> Data { Data("{\"success\":true,\"errors\":[],\"result\":\(result),\"result_info\":{\"page\":1,\"per_page\":50,\"total_pages\":1,\"total_count\":1}}".utf8) }
-    nonisolated static let forbidden = Data("{\"success\":false,\"errors\":[{\"code\":10000,\"message\":\"Authentication error\"}],\"result\":null}".utf8)
-
-    /// A stub account: verify ok, one account, one zone, empty lists elsewhere; `deny` paths answer 403.
     func server(deny: [String] = [], verifyStatus: Int = 200) -> StubServer {
-        return StubServer { req in
-            let path = req.url!.path
-            if path.hasSuffix("/user/tokens/verify") {
-                return (StubURLProtocol.response(req.url!, status: verifyStatus), verifyStatus == 200 ? Self.ok("{\"id\":\"tok1\",\"status\":\"active\"}") : Data("{\"success\":false,\"errors\":[{\"code\":1000,\"message\":\"Invalid API Token\"}],\"result\":null}".utf8))
-            }
-            if deny.contains(where: { path.contains($0) }) { return (StubURLProtocol.response(req.url!, status: 403), Self.forbidden) }
-            if path.hasSuffix("/accounts") { return (StubURLProtocol.response(req.url!), Self.ok("[{\"id\":\"acc1\",\"name\":\"Example account\"}]")) }
-            if path.hasSuffix("/zones") { return (StubURLProtocol.response(req.url!), Self.ok("[{\"id\":\"z1\",\"name\":\"example.dev\",\"status\":\"active\",\"paused\":false,\"name_servers\":[],\"plan\":{\"name\":\"Free\"},\"account\":{\"id\":\"acc1\"}}]")) }
-            return (StubURLProtocol.response(req.url!), Self.ok("[]"))
-        }
+        StubServer { req in TestAPI.base(req, deny: deny, verifyStatus: verifyStatus) }
     }
 
     func session(_ stub: StubServer, _ store: TokenStore) -> Session {

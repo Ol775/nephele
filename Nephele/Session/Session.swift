@@ -23,6 +23,8 @@ final class Session {
     private(set) var client: CFClient?
     private(set) var tokenHint = ""
     private(set) var signInError: String?
+    /// Stores compare this to the value they last loaded at; bumping it makes every store refetch.
+    private(set) var cacheEpoch = 0
 
     @ObservationIgnored private let tokenStore: TokenStore
     @ObservationIgnored private let makeClient: (String) -> CFClient
@@ -55,6 +57,8 @@ final class Session {
             signInError = (error as? LocalizedError)?.errorDescription ?? "Couldn't reach Cloudflare. Check your connection and try again."
         }
     }
+
+    func clearCache() { cacheEpoch += 1 }
 
     func signOut() {
         tokenStore.delete()
