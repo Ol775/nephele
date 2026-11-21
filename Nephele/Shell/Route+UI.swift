@@ -1,0 +1,29 @@
+import Foundation
+
+extension Route {
+    var title: String {
+        switch self {
+        case .overview: "Overview"
+        case .domains: "Domains"
+        case .alerts: "Alerts"
+        case .usage: "Usage"
+        case .appearance: "Appearance"
+        case .settings: "Settings"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .overview: "square.grid.2x2"
+        case .domains: "globe"
+        case .alerts: "bell"
+        case .usage: "chart.bar"
+        case .appearance: "slider.horizontal.3"
+        case .settings: "gearshape"
+        }
+    }
+}
+
+extension AppSettings {
+    var visibleRoutes: [Route] { nav.filter(\.visible).map(\.id) }
+}
