@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct SignInView: View {
     @Environment(Session.self) private var session
@@ -8,7 +9,7 @@ struct SignInView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "cloud").font(.system(size: 44, weight: theme.iconWeight)).foregroundStyle(theme.accent)
+            Image(nsImage: NSApp?.applicationIconImage ?? NSImage()).resizable().frame(width: 72, height: 72).accessibilityHidden(true)
             Text("Connect your Cloudflare account").font(.title2.bold())
             Text("Paste an API token. Start with read-only access: Zone Read, DNS Read, Notifications Read and Account Analytics Read. Nephele keeps it in your Keychain and sends it only to Cloudflare.")
                 .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: 420)
