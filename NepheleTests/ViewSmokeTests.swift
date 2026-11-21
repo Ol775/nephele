@@ -99,6 +99,12 @@ import CloudflareKitTesting
         await store.loadTriggers(zones: w.domains.zones.value ?? [])
         #expect(try render("worker-triggers", WorkerTriggersView(store: store), w) > 5_000)
     }
+    @Test func workerVersionsRenders() async throws {
+        let w = try await world()
+        let store = WorkerStore(script: WorkerScript(id: "hello-api"), session: w.session)
+        await store.loadVersions()
+        #expect(try render("worker-versions", WorkerVersionsView(store: store), w) > 5_000)
+    }
     @Test func alertsRenders() async throws {
         let w = try await world()
         #expect(try render("alerts", AlertsView(), w) > 5_000)

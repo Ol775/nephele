@@ -6,7 +6,7 @@ import CloudflareKit
 @MainActor @Observable
 final class WorkerStore {
     let script: WorkerScript
-    private(set) var latestDeployment: LoadState<WorkerDeployment?> = .idle
+    var latestDeployment: LoadState<WorkerDeployment?> = .idle
     /// Starts true: a token's scopes can't be read cheaply, so the first forbidden write turns it off.
     private(set) var canWrite = true
     var formError: String?
@@ -14,6 +14,8 @@ final class WorkerStore {
     private(set) var secretNames: LoadState<[String]> = .idle
     private(set) var workersDev: Bool?
     var triggers: LoadState<WorkerTriggers> = .idle
+    var versions: LoadState<[WorkerVersion]> = .idle
+    var deployments: LoadState<[WorkerDeployment]> = .idle
     let confirm = ConfirmGate<WorkerChange>()
 
     @ObservationIgnored let session: Session
@@ -106,6 +108,8 @@ final class WorkerStore {
             }
         case .removeCron, .removeRoute, .detachDomain:
             await confirmTriggerChange(change)
+        case .deploy(let versionID, let label, let rollback):
+            await deploy(versionID: versionID, message: rollback ? "Rolled back to \(label) from Nephele" : "Deployed \(label) from Nephele")
         }
     }
 

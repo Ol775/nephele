@@ -1,0 +1,4 @@
+{"success":true,"errors":[],"messages":[],"result":{"items":[
+{"id":"v-0001-bbbb","number":1,"metadata":{"created_on":"2026-11-01T09:30:00Z","author_email":"dev@example.dev","source":"api"}},
+{"id":"v-0002-aaaa","number":2,"metadata":{"created_on":"2026-11-18T09:30:00Z","author_email":"dev@example.dev","source":"api"},"annotations":{"workers/message":"Fix timeout"}}
+]}}
