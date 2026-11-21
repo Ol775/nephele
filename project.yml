@@ -1,0 +1,54 @@
+name: Nephele
+options:
+  bundleIdPrefix: io.github.ol775
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+packages:
+  CloudflareKit:
+    path: Packages/CloudflareKit
+targets:
+  Nephele:
+    type: application
+    platform: macOS
+    sources: [Nephele]
+    dependencies:
+      - package: CloudflareKit
+        product: CloudflareKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.ol775.nephele
+        CODE_SIGN_ENTITLEMENTS: Nephele/Nephele.entitlements
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Nephele
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
+        ENABLE_HARDENED_RUNTIME: YES
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+  NepheleTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [NepheleTests]
+    dependencies:
+      - target: Nephele
+      - package: CloudflareKit
+        product: CloudflareKit
+      - package: CloudflareKit
+        product: CloudflareKitTesting
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.ol775.nephele.tests
+schemes:
+  Nephele:
+    build:
+      targets:
+        Nephele: all
+    test:
+      targets: [NepheleTests]
