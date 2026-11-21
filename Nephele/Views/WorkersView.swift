@@ -3,6 +3,7 @@ import CloudflareKit
 
 struct WorkersView: View {
     @Environment(WorkersStore.self) private var workers
+    @Environment(Session.self) private var session
     @State private var query = ""
     @State private var creating = false
     @State private var path: [WorkerScript] = []
@@ -30,6 +31,7 @@ struct WorkersView: View {
             .navigationDestination(for: WorkerScript.self) { WorkerDetailView(script: $0) }
         }
         .task { await workers.load() }
+        .onChange(of: session.identityEpoch) { path = [] }
     }
 }
 

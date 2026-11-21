@@ -15,18 +15,23 @@ final class WorkersStore {
     func reset() { workers = .idle; details = [:] }
 
     func detail(for script: WorkerScript) -> WorkerStore {
-        if let existing = details[script.id] { return existing }
+        let key = "\(session.selectedAccountID ?? "")/\(script.id)"
+        if let existing = details[key] { return existing }
         let store = WorkerStore(script: script, session: session)
-        details[script.id] = store
+        details[key] = store
         return store
     }
 
     func load(force: Bool = false) async {
         guard let client = session.client, let account = session.selectedAccountID else { return }
+        let epoch = session.identityEpoch
         if workers.value == nil { workers = .loading }
         do {
-            workers = .loaded(try await client.workers(accountID: account).sorted { $0.id < $1.id })
+            let list = try await client.workers(accountID: account).sorted { $0.id < $1.id }
+            guard epoch == session.identityEpoch else { return }
+            workers = .loaded(list)
         } catch let error as CloudflareError {
+            guard epoch == session.identityEpoch else { return }
             session.handle(error)
             if workers.value == nil { workers = .failed(error) }
         } catch {
@@ -58,7 +63,7 @@ final class WorkersStore {
         do {
             try await client.deleteWorker(accountID: account, script: script.id)
             workers = .loaded((workers.value ?? []).filter { $0.id != script.id })
-            details[script.id] = nil
+            details["\(session.selectedAccountID ?? "")/\(script.id)"] = nil
         } catch { report(error, fallback: "Couldn't delete that Worker.") }
     }
 

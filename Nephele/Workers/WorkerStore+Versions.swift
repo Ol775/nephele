@@ -10,7 +10,7 @@ extension WorkerStore {
     func isLive(_ version: WorkerVersion) -> Bool { version.id == liveVersionID }
 
     func loadVersions() async {
-        guard let client = session.client, let account = session.selectedAccountID else { return }
+        guard let client = session.client, let account = activeAccount else { return }
         let name = script.id
         if versions.value == nil { versions = .loading }
         if deployments.value == nil { deployments = .loading }

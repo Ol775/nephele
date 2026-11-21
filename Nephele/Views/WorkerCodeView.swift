@@ -17,10 +17,7 @@ struct WorkerCodeView: View {
                     if let reason = store.readOnlyReason {
                         ContentUnavailableView("Can't edit this module", systemImage: "doc.badge.gearshape", description: Text(reason))
                     } else {
-                        TextEditor(text: $store.draft)
-                            .font(.system(size: theme.fontSize, design: .monospaced))
-                            .autocorrectionDisabled()
-                            .scrollContentBackground(.hidden)
+                        CodeEditor(text: $store.draft, fontSize: theme.fontSize)
                             .padding(8)
                             .accessibilityLabel("Worker code")
                     }
