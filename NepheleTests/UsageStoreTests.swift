@@ -64,6 +64,14 @@ import CloudflareKitTesting
         #expect(graphQLCount(stub, containing: "httpRequests1") == 0)
     }
 
+    @Test func resetForgetsLoadedUsage() async throws {
+        let store = try await make(server())
+        await store.load()
+        store.reset()
+        #expect(store.traffic.value == nil)
+        #expect(store.meters.value == nil)
+    }
+
     @Test func clearCacheReloadsEverything() async throws {
         let stub = server()
         let store = try await make(stub)

@@ -21,6 +21,13 @@ final class DomainsStore {
 
     func clearCache() { loadedAt = nil }
 
+    /// Drops everything, for sign-out or an account switch.
+    func reset() {
+        zones = .idle
+        lastError = nil
+        loadedAt = nil
+    }
+
     func load(force: Bool = false) async {
         guard let client = session.client else { return }
         let fresh = loadedAt.map { now().timeIntervalSince($0) <= ttl } ?? false

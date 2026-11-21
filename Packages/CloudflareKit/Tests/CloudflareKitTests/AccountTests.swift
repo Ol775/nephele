@@ -54,4 +54,13 @@ import CloudflareKitTesting
         #expect(result.count == 9)
         #expect(result.allSatisfy { !$0.granted })
     }
+
+    @Test func verifyAccountTokenUsesTheAccountEndpoint() async throws {
+        let stub = StubServer { req in
+            (StubURLProtocol.response(req.url!), Data("{\"success\":true,\"errors\":[],\"result\":{\"id\":\"tokid2\",\"status\":\"active\"}}".utf8))
+        }
+        let status = try await CFClient(token: "t", session: stub.session).verifyToken(accountID: "acc1")
+        #expect(status.status == "active")
+        #expect(stub.recorded[0].request.url?.path == "/client/v4/accounts/acc1/tokens/verify")
+    }
 }

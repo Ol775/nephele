@@ -86,6 +86,17 @@ import CloudflareKitTesting
         #expect(zoneRequests(stub) == after + 1)
     }
 
+    @Test func resetForgetsEverythingLoaded() async throws {
+        let stub = StubServer { TestAPI.base($0) }
+        let store = DomainsStore(session: try await TestAPI.readySession(stub), ttl: 60)
+        await store.load()
+        store.reset()
+        #expect(store.zones.value == nil)
+        let before = zoneRequests(stub)
+        await store.load()
+        #expect(zoneRequests(stub) == before + 1)
+    }
+
     @Test func clearCacheForcesNextLoadToRefetch() async throws {
         let stub = StubServer { TestAPI.base($0) }
         let store = DomainsStore(session: try await TestAPI.readySession(stub), ttl: 60)

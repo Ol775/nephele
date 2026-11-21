@@ -134,12 +134,17 @@ extension CFClient {
         guard !zoneIDs.isEmpty else { return TrafficSummary(points: []) }
         let span: TimeInterval = switch range { case .h24: 86_400; case .d7: 7 * 86_400; case .d30: 30 * 86_400 }
         let start = now.addingTimeInterval(-span)
-        let vars = range == .h24
-            ? TrafficVars(zones: zoneIDs, start: Day.iso(start), end: Day.iso(now))
-            : TrafficVars(zones: zoneIDs, start: Day.string(start), end: Day.string(now))
-        let data: TrafficData = try await graphQL(AnalyticsQueries.traffic(range: range), variables: vars)
+        // Cloudflare allows at most 10 zones in one zone-scoped query, so ask in groups of ten.
+        var groups: [ZoneSeries.Group] = []
+        for chunk in stride(from: 0, to: zoneIDs.count, by: 10).map({ Array(zoneIDs[$0..<min($0 + 10, zoneIDs.count)]) }) {
+            let chunkVars = range == .h24
+                ? TrafficVars(zones: chunk, start: Day.iso(start), end: Day.iso(now))
+                : TrafficVars(zones: chunk, start: Day.string(start), end: Day.string(now))
+            let data: TrafficData = try await graphQL(AnalyticsQueries.traffic(range: range), variables: chunkVars)
+            groups += data.viewer.zones.flatMap(\.groups)
+        }
         var merged: [Date: TrafficPoint] = [:]
-        for group in data.viewer.zones.flatMap(\.groups) {
+        for group in groups {
             let stamp = group.dimensions.datetime.flatMap(Day.parseISO) ?? group.dimensions.date.flatMap(Day.parse)
             guard let stamp else { continue }
             let old = merged[stamp]

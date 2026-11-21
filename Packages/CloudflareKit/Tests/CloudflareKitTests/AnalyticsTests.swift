@@ -93,4 +93,21 @@ import CloudflareKitTesting
             _ = try await c.accountMeters(accountID: "acc1", now: now)
         }
     }
+
+    @Test func trafficSplitsZoneIDsIntoGroupsOfTenAndMergesTheResults() async throws {
+        let stub = StubServer { req in
+            (StubURLProtocol.response(req.url!), Data("{\"data\":{\"viewer\":{\"zones\":[{\"httpRequests1dGroups\":[{\"dimensions\":{\"date\":\"2026-11-20\"},\"sum\":{\"requests\":10,\"cachedRequests\":5,\"threats\":1}}]}]}},\"errors\":null}".utf8))
+        }
+        let ids = (1...23).map { "zone\($0)" }
+        let summary = try await CFClient(token: "t", session: stub.session).traffic(zoneIDs: ids, range: .d7, now: now)
+        #expect(stub.recorded.count == 3)
+        for r in stub.recorded {
+            let raw = try #require(r.body)
+            let json = try #require(try JSONSerialization.jsonObject(with: raw) as? [String: Any])
+            let vars = try #require(json["variables"] as? [String: Any])
+            #expect((vars["zones"] as? [String] ?? []).count <= 10)
+        }
+        #expect(summary.totalRequests == 30)
+        #expect(summary.points.count == 1)
+    }
 }

@@ -113,6 +113,26 @@ final class HistoryFeed: @unchecked Sendable {
         #expect(r.store.openCount == 0)
     }
 
+    @Test func switchingAccountPrimesTheNewAccountSilently() async throws {
+        let r = try await rig([("a", "incident_alert")])
+        await r.poller.pollOnce()
+        r.session.selectAccount("acc2")
+        r.feed.events = [(id: "x", type: "http_alert_origin_error"), (id: "y", type: "universal_ssl_event_type")]
+        await r.poller.pollOnce()
+        #expect(await r.notifier.count == 0)
+        r.feed.events.append((id: "z", type: "http_alert_origin_error"))
+        await r.poller.pollOnce()
+        #expect(await r.notifier.count == 1)
+    }
+
+    @Test func resetClearsLoadedAlerts() async throws {
+        let r = try await rig([("a", "incident_alert")])
+        await r.store.load()
+        r.store.reset()
+        #expect(r.store.events.value == nil)
+        #expect(r.store.policies.value == nil)
+    }
+
     @Test func alertTypesMapToNotificationCategories() {
         #expect(AlertCategory.of(alertType: "universal_ssl_event_type") == .cert)
         #expect(AlertCategory.of(alertType: "http_alert_origin_error") == .origin)

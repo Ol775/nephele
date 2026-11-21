@@ -37,11 +37,18 @@ import CloudflareKitTesting
         #expect(d.newEvents(batch + [event("c")]).map(\.id) == ["c"])
     }
 
-    @Test func dedupeKeepsOnlyMaxRemembered() {
+    @Test func dedupeDoesNotRenotifyWhenHistoryIsLargerThanTheLimit() {
         var d = AlertDeduper(maxRemembered: 500)
-        let batch = (0...500).map { event("e\($0)") }
-        #expect(d.newEvents(batch).count == 501)
-        #expect(d.newEvents(batch).map(\.id) == ["e0"])
+        let history = (0..<700).map { event("e\($0)") }
+        d.prime(history)
+        #expect(d.newEvents(history).isEmpty)
+        #expect(d.newEvents(history + [event("fresh")]).map(\.id) == ["fresh"])
+    }
+
+    @Test func rememberedSetStaysBoundedAcrossManyPolls() {
+        var d = AlertDeduper(maxRemembered: 500)
+        for batch in 0..<200 { _ = d.newEvents((0..<10).map { event("b\(batch)-\($0)") }) }
+        #expect(d.rememberedCount <= 500)
     }
 
     @Test func primingMarksExistingEventsSeenWithoutReturningThem() {

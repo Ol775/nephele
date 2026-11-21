@@ -9,9 +9,9 @@ final class AlertPoller {
     private let settings: SettingsStore
     private let notifier: any Notifier
     private let defaults: UserDefaults
-    private var deduper: AlertDeduper
+    private var dedupers: [String: AlertDeduper] = [:]
     private var task: Task<Void, Never>?
-    private static let key = "nephele.alerts.deduper"
+    private static let keyPrefix = "nephele.alerts.deduper."
 
     init(store: AlertsStore, session: Session, settings: SettingsStore, notifier: any Notifier = SystemNotifier(), defaults: UserDefaults = .standard) {
         self.store = store
@@ -19,7 +19,6 @@ final class AlertPoller {
         self.settings = settings
         self.notifier = notifier
         self.defaults = defaults
-        deduper = defaults.data(forKey: Self.key).flatMap { try? JSONDecoder().decode(AlertDeduper.self, from: $0) } ?? AlertDeduper()
     }
 
     func start() {
@@ -39,21 +38,28 @@ final class AlertPoller {
     }
 
     func pollOnce() async {
-        guard session.state == .ready, let events = await store.fetchEvents() else { return }
+        guard session.state == .ready, let account = session.selectedAccountID, let events = await store.fetchEvents() else { return }
+        var deduper = dedupers[account] ?? loadDeduper(account)
         guard deduper.isPrimed else {
+            // First look at this account: remember its history without notifying about it.
             deduper.prime(events)
-            persist()
+            save(deduper, for: account)
             return
         }
         let fresh = deduper.newEvents(events)
-        persist()
+        save(deduper, for: account)
         let prefs = settings.settings.notifications
         for event in fresh where AlertCategory.of(alertType: event.alertType)?.isEnabled(in: prefs) ?? true {
             await notifier.post(title: event.name, body: event.alertType.replacingOccurrences(of: "_", with: " ").capitalized)
         }
     }
 
-    private func persist() {
-        if let data = try? JSONEncoder().encode(deduper) { defaults.set(data, forKey: Self.key) }
+    private func loadDeduper(_ account: String) -> AlertDeduper {
+        defaults.data(forKey: Self.keyPrefix + account).flatMap { try? JSONDecoder().decode(AlertDeduper.self, from: $0) } ?? AlertDeduper()
+    }
+
+    private func save(_ deduper: AlertDeduper, for account: String) {
+        dedupers[account] = deduper
+        if let data = try? JSONEncoder().encode(deduper) { defaults.set(data, forKey: Self.keyPrefix + account) }
     }
 }

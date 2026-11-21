@@ -25,8 +25,9 @@ private struct Ignored: Decodable, Sendable {
 }
 
 extension CFClient {
-    public func verifyToken() async throws -> TokenStatus {
-        let env: CFEnvelope<TokenStatus> = try await get("/user/tokens/verify")
+    /// User tokens verify at /user/tokens/verify; account-owned (cfat_) tokens verify under their account.
+    public func verifyToken(accountID: String? = nil) async throws -> TokenStatus {
+        let env: CFEnvelope<TokenStatus> = try await get(accountID.map { "/accounts/\($0)/tokens/verify" } ?? "/user/tokens/verify")
         guard let status = env.result else { throw CloudflareError.decoding("Missing result") }
         return status
     }

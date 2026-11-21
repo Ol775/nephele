@@ -80,6 +80,12 @@ final class AlertsStore {
         } catch {}
     }
 
+    func reset() {
+        policies = .idle
+        events = .idle
+        lastError = nil
+    }
+
     func acknowledge(_ id: String) {
         acknowledged.insert(id)
         defaults.set(Array(acknowledged), forKey: Self.key)

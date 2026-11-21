@@ -74,6 +74,7 @@ extension DNSRecordDraft {
         default: break
         }
         out.proxied = proxied && Self.proxiable.contains(out.type)
+        if out.proxied { out.ttl = 1 }  // Cloudflare only allows automatic TTL on proxied records
         return out
     }
 }

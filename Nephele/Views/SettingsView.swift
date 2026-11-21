@@ -10,11 +10,10 @@ struct SettingsView: View {
     @State private var cacheCleared = false
 
     var body: some View {
-        @Bindable var session = session
         Form {
             Section("Account and API token") {
                 if session.state == .ready {
-                    Picker("Account", selection: $session.selectedAccountID) {
+                    Picker("Account", selection: Binding(get: { session.selectedAccountID }, set: { session.selectAccount($0) })) {
                         ForEach(session.accounts) { Text($0.name).tag(Optional($0.id)) }
                     }
                     LabeledContent("Token") {
@@ -58,7 +57,7 @@ struct SettingsView: View {
                     Button("Clear cache") { session.clearCache(); cacheCleared = true }
                     if cacheCleared { Text("Cache cleared.").foregroundStyle(.secondary) }
                 }
-                Text("Results are kept in memory for about a minute and never written to disk. Nephele collects no analytics and talks only to the Cloudflare API.")
+                Text("Results are kept in memory for about a minute. Only your settings and which alerts you have seen are saved on this Mac. Nephele collects no analytics and talks only to the Cloudflare API.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
             Section("Keyboard shortcuts") {

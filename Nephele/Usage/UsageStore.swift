@@ -23,6 +23,11 @@ final class UsageStore {
         _ = await (t, m)
     }
 
+    func reset() {
+        traffic = .idle
+        meters = .idle
+    }
+
     func setRange(_ newRange: UsageRange) async {
         range = newRange
         await loadTraffic()

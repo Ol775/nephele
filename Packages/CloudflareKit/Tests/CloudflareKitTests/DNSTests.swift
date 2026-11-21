@@ -45,6 +45,13 @@ import CloudflareKitTesting
         #expect(try draft("MX", name: "@", content: "mail.example.dev", proxied: true, priority: 10).validated(zone: "example.dev").proxied == false)
         #expect(try draft("A", proxied: true).validated(zone: "example.dev").proxied == true)
     }
+    @Test func proxiedRecordsAlwaysUseAutomaticTTL() throws {
+        var d = draft("A", proxied: true); d.ttl = 300
+        #expect(try d.validated(zone: "example.dev").ttl == 1)
+        var dnsOnly = draft("A", proxied: false); dnsOnly.ttl = 300
+        #expect(try dnsOnly.validated(zone: "example.dev").ttl == 300)
+    }
+
     @Test func emptyNameAndContentThrow() {
         #expect(throws: DNSValidationError.emptyName) { try draft(name: "  ").validated(zone: "example.dev") }
         #expect(throws: DNSValidationError.emptyContent) { try draft(content: "").validated(zone: "example.dev") }

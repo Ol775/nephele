@@ -24,7 +24,7 @@ struct NepheleApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "main") {
             Group {
                 if session.state == .ready { AppShell() } else { SignInView() }
             }
@@ -36,8 +36,9 @@ struct NepheleApp: App {
             .environment(usage)
             .environment(\.nepheleTheme, NepheleTheme(settings.settings))
             .frame(minWidth: 860, minHeight: 560)
-            .task { await session.restore() }
-            .task(id: session.state) { if session.state == .ready { poller.start() } else { poller.stop() } }
+            .task { if !AppEnvironment.isRunningTests { await session.restoreWithRetry() } }
+            .task(id: session.state) { if session.state == .ready && !AppEnvironment.isRunningTests { poller.start() } else { poller.stop() } }
+            .onChange(of: session.identityEpoch) { domains.reset(); alerts.reset(); usage.reset() }
         }
         .commands {
             CommandGroup(replacing: .appSettings) {
@@ -49,7 +50,7 @@ struct NepheleApp: App {
         }
         MenuBarExtra("Nephele", systemImage: "cloud", isInserted: settings.binding(\.showMenuBar)) {
             MenuBarContent()
-                .environment(alerts).environment(domains).environment(navigator)
+                .environment(alerts).environment(domains).environment(navigator).environment(session)
         }
     }
 }

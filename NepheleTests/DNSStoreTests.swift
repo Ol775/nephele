@@ -48,44 +48,98 @@ import CloudflareKitTesting
         await store.load()
         let record = try #require(store.records.value?.first)
         store.requestDelete(record)
-        #expect(store.pendingDelete?.id == "r1")
+        let action = try #require(store.pending)
+        #expect(action.kind == .delete && action.record.id == "r1")
         #expect(count(stub, "DELETE") == 0)
-        store.cancelDelete()
-        #expect(store.pendingDelete == nil)
+        store.cancel()
+        #expect(store.pending == nil)
+        await store.confirm(action)
         #expect(count(stub, "DELETE") == 0)
         store.requestDelete(record)
-        await store.confirmDelete()
+        await store.confirm(try #require(store.pending))
         #expect(count(stub, "DELETE") == 1)
         #expect(store.records.value?.map(\.id) == ["r2"])
-        #expect(store.pendingDelete == nil)
+        #expect(store.pending == nil)
     }
 
-    @Test func confirmDeleteWithoutARequestDoesNothing() async throws {
+    @Test func confirmStillWorksAfterTheDialogIsDismissedByTheSystem() async throws {
         let stub = server()
         let store = DNSStore(zone: TestAPI.zone, session: try await TestAPI.readySession(stub))
         await store.load()
-        await store.confirmDelete()
+        store.requestDelete(try #require(store.records.value?.first))
+        let action = try #require(store.pending)
+        store.dialogDismissed()
+        #expect(store.pending == nil)
+        await store.confirm(action)
+        #expect(count(stub, "DELETE") == 1)
+    }
+
+    @Test func confirmingSomethingNeverRequestedDoesNothing() async throws {
+        let stub = server()
+        let store = DNSStore(zone: TestAPI.zone, session: try await TestAPI.readySession(stub))
+        await store.load()
+        let record = try #require(store.records.value?.first)
+        await store.confirm(PendingAction(kind: .delete, record: record))
         #expect(count(stub, "DELETE") == 0)
     }
 
-    @Test func toggleProxySendsPatchForA() async throws {
+    @Test func proxyChangeNeedsConfirmationThenSendsPatch() async throws {
         let stub = server()
         let store = DNSStore(zone: TestAPI.zone, session: try await TestAPI.readySession(stub))
         await store.load()
-        let a = try #require(store.records.value?.first)
-        await store.toggleProxy(a)
+        store.requestProxyToggle(try #require(store.records.value?.first))
+        let action = try #require(store.pending)
+        #expect(action.kind == .proxy)
+        #expect(count(stub, "PATCH") == 0)
+        await store.confirm(action)
         #expect(count(stub, "PATCH") == 1)
         #expect(store.records.value?.first?.proxied == false)
     }
 
-    @Test func toggleProxyIsRejectedForMX() async throws {
+    @Test func proxyChangeIsRejectedForMXWithoutAskingToConfirm() async throws {
         let stub = server()
         let store = DNSStore(zone: TestAPI.zone, session: try await TestAPI.readySession(stub))
         await store.load()
-        let mx = try #require(store.records.value?.last)
-        await store.toggleProxy(mx)
+        store.requestProxyToggle(try #require(store.records.value?.last))
+        #expect(store.pending == nil)
         #expect(count(stub, "PATCH") == 0)
         #expect(store.formError == "MX records can't be proxied.")
+    }
+
+    @Test func updateSendsAPatchWithTheValidatedDraft() async throws {
+        let stub = server()
+        let store = DNSStore(zone: TestAPI.zone, session: try await TestAPI.readySession(stub))
+        await store.load()
+        let record = try #require(store.records.value?.first)
+        await store.update(record, with: DNSRecordDraft(type: "A", name: "EXAMPLE.dev", content: "192.0.2.99", proxied: true, ttl: 300))
+        #expect(count(stub, "PATCH") == 1)
+        let sent = try #require(stub.recorded.last { $0.request.httpMethod == "PATCH" })
+        let raw = try #require(sent.body)
+        let json = try #require(try JSONSerialization.jsonObject(with: raw) as? [String: Any])
+        #expect(json["content"] as? String == "192.0.2.99")
+        #expect(json["ttl"] as? Int == 300)
+        #expect(json["name"] as? String == "example.dev")
+        #expect(store.formError == nil)
+    }
+
+    @Test func invalidEditSetsAnErrorAndSendsNothing() async throws {
+        let stub = server()
+        let store = DNSStore(zone: TestAPI.zone, session: try await TestAPI.readySession(stub))
+        await store.load()
+        let record = try #require(store.records.value?.first)
+        await store.update(record, with: DNSRecordDraft(type: "A", name: "@", content: "not an ip", proxied: true))
+        #expect(store.formError == "An A record needs an IPv4 address, such as 192.0.2.10.")
+        #expect(count(stub, "PATCH") == 0)
+    }
+
+    @Test func addPassesTheProxiedChoiceThrough() async throws {
+        let stub = server()
+        let store = DNSStore(zone: TestAPI.zone, session: try await TestAPI.readySession(stub))
+        await store.add(DNSRecordDraft(type: "A", name: "mail", content: "192.0.2.55", proxied: false))
+        let sent = try #require(stub.recorded.last { $0.request.httpMethod == "POST" })
+        let raw = try #require(sent.body)
+        let json = try #require(try JSONSerialization.jsonObject(with: raw) as? [String: Any])
+        #expect(json["proxied"] as? Bool == false)
     }
 
     @Test func emptyZoneIsLoadedEmpty() async throws {

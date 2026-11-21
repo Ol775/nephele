@@ -53,6 +53,7 @@ extension CFClient {
 public struct AlertDeduper: Codable, Sendable, Equatable {
     public let maxRemembered: Int
     public private(set) var isPrimed = false
+    public var rememberedCount: Int { seen.count }
     private var seen: [String] = []
 
     public init(maxRemembered: Int = 500) { self.maxRemembered = maxRemembered }
@@ -62,7 +63,9 @@ public struct AlertDeduper: Codable, Sendable, Equatable {
         var fresh: [AlertEvent] = []
         for event in events where known.insert(event.id).inserted { fresh.append(event) }
         seen += fresh.map(\.id)
-        if seen.count > maxRemembered { seen.removeFirst(seen.count - maxRemembered) }
+        // Never forget events from the batch just seen, or a history longer than the limit re-notifies forever.
+        let limit = max(maxRemembered, events.count)
+        if seen.count > limit { seen.removeFirst(seen.count - limit) }
         return fresh
     }
 
