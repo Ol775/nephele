@@ -40,7 +40,7 @@ public actor CFClient {
     }
 
     public func get<T: Decodable & Sendable>(_ path: String, query: [URLQueryItem] = []) async throws -> CFEnvelope<T> {
-        let (data, status) = try await perform("GET", path, query: query, body: nil)
+        let (data, status, _) = try await perform("GET", path, query: query, body: nil)
         return try decodeEnvelope(data, status: status)
     }
 
@@ -59,7 +59,7 @@ public actor CFClient {
 
     public func send<T: Decodable & Sendable>(_ method: String, _ path: String, body: (any Encodable & Sendable)? = nil) async throws -> T {
         let data = try body.map { try encoder.encode(AnyEncodable(value: $0)) }
-        let (response, status) = try await perform(method, path, query: [], body: data)
+        let (response, status, _) = try await perform(method, path, query: [], body: data)
         let env: CFEnvelope<T> = try decodeEnvelope(response, status: status)
         guard let result = env.result else { throw CloudflareError.decoding("Missing result") }
         return result
@@ -67,7 +67,7 @@ public actor CFClient {
 
     public func graphQL<T: Decodable & Sendable>(_ query: String, variables: (any Encodable & Sendable)? = nil) async throws -> T {
         let payload = try encoder.encode(GraphQLRequest(query: query, variables: variables.map { AnyEncodable(value: $0) }))
-        let (data, status) = try await perform("POST", "/graphql", query: [], body: payload)
+        let (data, status, _) = try await perform("POST", "/graphql", query: [], body: payload)
         if status == 401 { throw CloudflareError.unauthorized }
         do {
             let response = try decoder.decode(GraphQLResponse<T>.self, from: data)
@@ -84,9 +84,28 @@ public actor CFClient {
         catch { throw CloudflareError.decoding(String(describing: type(of: error))) }
     }
 
+    /// Sends a request and returns the whole validated response body, so callers can decode it with their own
+    /// `JSONDecoder` (no key conversion: binding field names survive exactly).
+    public func raw(_ method: String, _ path: String, query: [URLQueryItem] = [], body: Data? = nil, contentType: String = "application/json") async throws -> Data {
+        let (data, status, _) = try await perform(method, path, query: query, body: body, contentType: contentType)
+        let _: CFEnvelope<JSONValue> = try decodeEnvelope(data, status: status)
+        return data
+    }
+
+    /// GET for a response that is not a Cloudflare envelope (script content). Header names come back lowercased.
+    public func download(_ path: String) async throws -> (data: Data, headers: [String: String]) {
+        let (data, status, headers) = try await perform("GET", path, query: [], body: nil)
+        switch status {
+        case 200..<300: return (data, headers)
+        case 401: throw CloudflareError.unauthorized
+        case 403: throw CloudflareError.permissionDenied(nil)
+        default: throw CloudflareError.transport("HTTP \(status)")
+        }
+    }
+
     // MARK: - Transport
 
-    private func perform(_ method: String, _ path: String, query: [URLQueryItem], body: Data?) async throws -> (Data, Int) {
+    private func perform(_ method: String, _ path: String, query: [URLQueryItem], body: Data?, contentType: String = "application/json") async throws -> (Data, Int, [String: String]) {
         var comps = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
         if !query.isEmpty { comps.queryItems = query }
         var request = URLRequest(url: comps.url!)
@@ -95,7 +114,7 @@ public actor CFClient {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         if let body {
             request.httpBody = body
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(contentType, forHTTPHeaderField: "Content-Type")
         }
         var delay: TimeInterval = 1
         for attempt in 1...Self.maxAttempts {
@@ -110,7 +129,9 @@ public actor CFClient {
                     delay *= 2
                     continue
                 }
-                return (data, status)
+                var headers: [String: String] = [:]
+                for (k, v) in http?.allHeaderFields ?? [:] { if let k = k as? String, let v = v as? String { headers[k.lowercased()] = v } }
+                return (data, status, headers)
             } catch let error as URLError where (error.code == .timedOut || error.code == .networkConnectionLost) && attempt < Self.maxAttempts {
                 try await sleep(delay)
                 delay *= 2
