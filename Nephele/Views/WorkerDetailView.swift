@@ -10,6 +10,8 @@ struct WorkerDetailView: View {
     @Environment(WorkersStore.self) private var workers
     let script: WorkerScript
     @State private var tab = WorkerTab.overview
+    @State private var deleting = false
+    @Environment(\.dismiss) private var dismiss
 
     private var store: WorkerStore { workers.detail(for: script) }
 
@@ -34,6 +36,8 @@ struct WorkerDetailView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .navigationTitle(store.script.id)
+        .toolbar { ToolbarItem { Button("Delete Worker\u{2026}", systemImage: "trash", role: .destructive) { deleting = true } } }
+        .sheet(isPresented: $deleting) { DeleteWorkerSheet(workers: workers, script: script) { dismiss() } }
         .task { await store.load() }
     }
 }

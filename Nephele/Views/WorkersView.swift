@@ -4,9 +4,11 @@ import CloudflareKit
 struct WorkersView: View {
     @Environment(WorkersStore.self) private var workers
     @State private var query = ""
+    @State private var creating = false
+    @State private var path: [WorkerScript] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             LoadStateView(state: workers.workers, permission: "Workers Scripts Read", isEmpty: { $0.isEmpty },
                           emptyTitle: "No Workers yet", emptyMessage: "Create one from a template, or deploy with Wrangler.", emptySymbol: "curlybraces",
                           retry: { Task { await workers.load(force: true) } }) { all in
@@ -20,7 +22,11 @@ struct WorkersView: View {
                 }
             }
             .searchable(text: $query, prompt: "Filter Workers")
-            .toolbar { ToolbarItem { Button("Refresh", systemImage: "arrow.clockwise") { Task { await workers.load(force: true) } } } }
+            .toolbar {
+                ToolbarItem { Button("New Worker", systemImage: "plus") { creating = true } }
+                ToolbarItem { Button("Refresh", systemImage: "arrow.clockwise") { Task { await workers.load(force: true) } } }
+            }
+            .sheet(isPresented: $creating) { NewWorkerSheet(workers: workers) { path = [$0] } }
             .navigationDestination(for: WorkerScript.self) { WorkerDetailView(script: $0) }
         }
         .task { await workers.load() }

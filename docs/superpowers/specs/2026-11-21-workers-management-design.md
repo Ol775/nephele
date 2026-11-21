@@ -36,7 +36,7 @@ All under `/accounts/{id}/workers/scripts/{name}` unless noted.
 - Code: `GET .../content/v2`. Versions: `GET/POST .../versions`, `GET .../versions/{id}`. Deployments: `GET/POST .../deployments`.
 - Secrets: `GET/PUT .../secrets`, `DELETE .../secrets/{name}` (names only on read). Cron: `GET/PUT .../schedules`. workers.dev: `GET/POST/DELETE .../subdomain`; account subdomain `GET /workers/subdomain`.
 - Custom domains: `GET/PUT/DELETE /workers/domains`. Routes (per zone): `/zones/{id}/workers/routes` list/create/replace/delete.
-- Live tail: `POST .../tails` (start) and `DELETE .../tails/{id}`. The spec does not publish the response schema; the start response is expected to carry a WebSocket URL (as `wrangler tail` uses). **Unverified; confirm against a real response before building the tail screen.** Real-time logs may sample under load and allow at most 10 viewers per Worker.
+- Live tail: `POST .../tails` (start) and `DELETE .../tails/{id}`. The start response carries `id`, `url` (the WebSocket) and `expires_at` (confirmed in the spec 2026-11-21); the socket handshake itself is unverified live. Real-time logs may sample under load and allow at most 10 viewers per Worker.
 
 ## Parts and build order
 1. **Kit layer + list/overview:** models, `workers()` list, per-Worker overview (usage from existing analytics, latest deployment, triggers summary). Sidebar "Workers" route.

@@ -1,11 +1,12 @@
 import Foundation
 
 public enum WorkerValidationError: Error, Equatable, LocalizedError {
-    case messageTooLong, messageRequired
+    case messageTooLong, messageRequired, invalidName
     public var errorDescription: String? {
         switch self {
         case .messageTooLong: "Keep the message under 1,000 bytes."
         case .messageRequired: "Add a short message describing this change."
+        case .invalidName: "Use 1 to 63 lowercase letters, digits or hyphens, and don't start or end with a hyphen."
         }
     }
 }

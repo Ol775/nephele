@@ -114,6 +114,12 @@ import CloudflareKitTesting
         let w = try await world()
         #expect(try render("worker-logs", WorkerLogsView(script: "hello-api", session: w.session), w) > 5_000)
     }
+    @Test func newAndDeleteWorkerSheetsRender() async throws {
+        let w = try await world()
+        let ws = WorkersStore(session: w.session)
+        #expect(try render("new-worker", NewWorkerSheet(workers: ws) { _ in }, w, size: CGSize(width: 460, height: 320)) > 3_000)
+        #expect(try render("delete-worker", DeleteWorkerSheet(workers: ws, script: WorkerScript(id: "hello-api")) {}, w, size: CGSize(width: 460, height: 260)) > 3_000)
+    }
     @Test func alertsRenders() async throws {
         let w = try await world()
         #expect(try render("alerts", AlertsView(), w) > 5_000)

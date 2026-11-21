@@ -1,14 +1,16 @@
 # Nephele
 
-A native macOS 26 app for managing a Cloudflare account: domains and DNS, alerts, usage, and (coming next) Workers, storage and Zero Trust. Pure Swift and SwiftUI. An independent project, not affiliated with Cloudflare.
+A native macOS 26 app for managing a Cloudflare account: domains and DNS, alerts, usage, Workers, and (coming next) storage and Zero Trust. Pure Swift and SwiftUI. An independent project, not affiliated with Cloudflare.
 
-Phase 1 (this release) covers sign-in with an API token, an overview, domains with full DNS management, alerts with notifications and a menu bar item, usage against Free plan allowances, Settings and a full Appearance screen.
+Phase 1 covers sign-in with an API token, an overview, domains with full DNS management, alerts with notifications and a menu bar item, usage against Free plan allowances, Settings and a full Appearance screen.
+
+Phase 2a adds Workers: list, settings, variables, write-only secrets, routes, custom domains, cron triggers, versions with deploy and rollback, a code editor that saves new versions, live logs, templates, and delete. Saving code creates a version; deploying it is a separate, confirmed step.
 
 ## Privacy
 
 - Your API token is stored in the macOS Keychain only. It is sent only to the Cloudflare API.
 - No analytics, no telemetry, no server component. Results are cached in memory for about a minute and never written to disk.
-- Anything destructive (deleting a DNS record, for example) asks you to confirm first, naming the target.
+- Anything destructive (deleting a DNS record, rolling back or deleting a Worker, for example) asks you to confirm first, naming the target. Deleting a Worker means typing its name. Secret values are write-only and are never shown or stored.
 
 ## Create an API token
 
@@ -17,7 +19,7 @@ In the Cloudflare dashboard go to Profile, API Tokens, Create Token. Start with 
 - Zone: Zone Read, DNS Read
 - Account: Notifications Read, Account Analytics Read, Account Settings Read
 
-Add DNS Edit later if you want to change records. Missing permissions never break the app: the screens that need them show a prompt instead.
+For Workers add Workers Scripts Read (and Workers Tail Read for live logs, Workers Routes Read per zone). Add DNS Edit or Workers Scripts Edit later if you want to make changes. Missing permissions never break the app: the screens that need them show a prompt instead.
 
 ## Build
 
