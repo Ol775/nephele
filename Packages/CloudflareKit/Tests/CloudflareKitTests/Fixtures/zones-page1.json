@@ -1,0 +1,914 @@
+{
+ "success": true,
+ "errors": [],
+ "messages": [],
+ "result": [
+  {
+   "id": "zone0001",
+   "name": "example-01.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0002",
+   "name": "example-02.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0003",
+   "name": "example-03.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0004",
+   "name": "example-04.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0005",
+   "name": "example-05.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0006",
+   "name": "example-06.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0007",
+   "name": "example-07.dev",
+   "status": "pending",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0008",
+   "name": "example-08.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0009",
+   "name": "example-09.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0010",
+   "name": "example-10.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0011",
+   "name": "example-11.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0012",
+   "name": "example-12.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0013",
+   "name": "example-13.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0014",
+   "name": "example-14.dev",
+   "status": "pending",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0015",
+   "name": "example-15.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0016",
+   "name": "example-16.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0017",
+   "name": "example-17.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0018",
+   "name": "example-18.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0019",
+   "name": "example-19.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0020",
+   "name": "example-20.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0021",
+   "name": "example-21.dev",
+   "status": "pending",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0022",
+   "name": "example-22.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0023",
+   "name": "example-23.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0024",
+   "name": "example-24.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0025",
+   "name": "example-25.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0026",
+   "name": "example-26.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0027",
+   "name": "example-27.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0028",
+   "name": "example-28.dev",
+   "status": "pending",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0029",
+   "name": "example-29.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0030",
+   "name": "example-30.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0031",
+   "name": "example-31.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0032",
+   "name": "example-32.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0033",
+   "name": "example-33.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0034",
+   "name": "example-34.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0035",
+   "name": "example-35.dev",
+   "status": "pending",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0036",
+   "name": "example-36.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0037",
+   "name": "example-37.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0038",
+   "name": "example-38.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0039",
+   "name": "example-39.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0040",
+   "name": "example-40.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0041",
+   "name": "example-41.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0042",
+   "name": "example-42.dev",
+   "status": "pending",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0043",
+   "name": "example-43.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0044",
+   "name": "example-44.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0045",
+   "name": "example-45.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0046",
+   "name": "example-46.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0047",
+   "name": "example-47.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0048",
+   "name": "example-48.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0049",
+   "name": "example-49.dev",
+   "status": "pending",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  },
+  {
+   "id": "zone0050",
+   "name": "example-50.dev",
+   "status": "active",
+   "paused": false,
+   "type": "full",
+   "name_servers": [
+    "ada.ns.example.net",
+    "bob.ns.example.net"
+   ],
+   "plan": {
+    "name": "Free Website"
+   },
+   "account": {
+    "id": "acc0001",
+    "name": "Example account"
+   }
+  }
+ ],
+ "result_info": {
+  "page": 1,
+  "per_page": 50,
+  "total_pages": 2,
+  "count": 50,
+  "total_count": 53
+ }
+}

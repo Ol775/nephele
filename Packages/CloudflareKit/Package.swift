@@ -11,6 +11,6 @@ let package = Package(
     targets: [
         .target(name: "CloudflareKit"),
         .target(name: "CloudflareKitTesting"),
-        .testTarget(name: "CloudflareKitTests", dependencies: ["CloudflareKit", "CloudflareKitTesting"]),
+        .testTarget(name: "CloudflareKitTests", dependencies: ["CloudflareKit", "CloudflareKitTesting"], resources: [.copy("Fixtures")]),
     ]
 )
