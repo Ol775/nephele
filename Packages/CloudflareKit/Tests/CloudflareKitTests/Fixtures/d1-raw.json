@@ -1,0 +1,1 @@
+{"success":true,"errors":[],"messages":[],"result":[{"success":true,"meta":{"changed_db":false,"changes":0,"duration":0.42,"rows_read":3,"rows_written":0},"results":{"columns":["id","name","score"],"rows":[[1,"ada",9.5],[2,null,true],[3,"x\"y",{"a":1}]]}}]}

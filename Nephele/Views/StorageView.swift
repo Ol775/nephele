@@ -17,7 +17,7 @@ struct StorageView: View {
             Group {
                 switch tab {
                 case .kv: KVView()
-                case .d1: ContentUnavailableView("D1", systemImage: "hammer", description: Text("Coming next."))
+                case .d1: D1View()
                 case .r2: ContentUnavailableView("R2", systemImage: "hammer", description: Text("Coming next."))
                 }
             }
@@ -133,3 +133,105 @@ struct KVView: View {
     }
 }
 
+
+struct D1View: View {
+    @Environment(StorageStore.self) private var storage
+    @Environment(\.nepheleTheme) private var theme
+    @State private var creating = false
+    @State private var newName = ""
+    @State private var deleting: D1Database?
+
+    var body: some View {
+        @Bindable var d1 = storage.d1
+        HSplitView {
+            VStack(spacing: 0) {
+                LoadStateView(state: d1.databases, permission: "D1 Read", isEmpty: { $0.isEmpty },
+                              emptyTitle: "No databases", emptyMessage: "Create one to start running SQL.", emptySymbol: "cylinder.split.1x2",
+                              retry: { Task { await d1.load() } }) { list in
+                    List(list, selection: Binding(get: { d1.selected?.id }, set: { id in Task { await d1.select(list.first { $0.id == id }) } })) { db in
+                        Text(db.name).tag(db.id).contextMenu { Button("Delete\u{2026}", role: .destructive) { deleting = db }.disabled(!d1.canWrite) }
+                    }
+                }
+                if !d1.tables.isEmpty {
+                    Divider()
+                    List(d1.tables, id: \.self) { t in
+                        Text(t).monospaced().onTapGesture { d1.sql = "SELECT * FROM \"\(t)\" LIMIT 100;" }
+                    }.frame(maxHeight: 180)
+                }
+                Divider()
+                HStack {
+                    Button("New", systemImage: "plus") { creating = true }.disabled(!d1.canWrite)
+                    if let db = d1.selected { Button("Delete", systemImage: "trash") { deleting = db }.disabled(!d1.canWrite) }
+                    Spacer()
+                }.padding(8)
+            }
+            .frame(minWidth: 200, idealWidth: 230, maxWidth: 300)
+            console
+        }
+        .task { await d1.load() }
+        .sheet(item: $deleting) { db in
+            TypedConfirmSheet(title: "Delete \(db.name)?", message: "This deletes the database and all its data. It can't be undone. Type its name to confirm.",
+                              name: db.name, buttonLabel: "Delete database", error: d1.formError,
+                              onConfirm: { await d1.delete(db, typedName: $0) }, onDone: { if d1.formError == nil { deleting = nil } })
+        }
+        .alert("New database", isPresented: $creating) {
+            TextField("Name", text: $newName)
+            Button("Create") { Task { await d1.create(newName); newName = "" } }
+            Button("Cancel", role: .cancel) { newName = "" }
+        }
+        .confirmationDialog(d1.confirm.pending?.title(database: d1.selected?.name ?? "") ?? "",
+                            isPresented: Binding(get: { d1.confirm.pending != nil }, set: { if !$0 { d1.confirm.dialogDismissed() } }),
+                            presenting: d1.confirm.pending) { w in
+            Button("Run statement", role: .destructive) { Task { await d1.confirmWrite(w) } }
+            Button("Cancel", role: .cancel) { d1.confirm.cancel() }
+        } message: { w in Text(w.message(database: d1.selected?.name ?? "")) }
+    }
+
+    private var console: some View {
+        @Bindable var d1 = storage.d1
+        return VStack(spacing: 0) {
+            if d1.selected == nil {
+                ContentUnavailableView("Pick a database", systemImage: "cylinder.split.1x2", description: Text("Run SQL against it here."))
+            } else {
+                if !d1.canWrite { Label("Needs a token with D1 Edit to change data", systemImage: "lock").foregroundStyle(.secondary).padding(8) }
+                if let error = d1.formError { Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.red).padding(8) }
+                TextEditor(text: $d1.sql).font(.system(size: theme.fontSize, design: .monospaced)).frame(height: 120).padding(4)
+                    .accessibilityLabel("SQL")
+                HStack {
+                    Text("Reads run straight away. Anything that changes data asks first.").font(.footnote).foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Run") { Task { await d1.run() } }.keyboardShortcut(.return, modifiers: .command).disabled(d1.sql.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }.padding(8)
+                Divider()
+                LoadStateView(state: d1.results, permission: "D1 Read") { results in
+                    ScrollView([.horizontal, .vertical]) {
+                        VStack(alignment: .leading, spacing: 16) {
+                            ForEach(Array(results.enumerated()), id: \.offset) { _, r in ResultGrid(result: r) }
+                        }.padding(8)
+                    }
+                }
+                .overlay { if case .idle = d1.results { Text("Results appear here.").foregroundStyle(.secondary) } }
+            }
+        }
+    }
+}
+
+struct ResultGrid: View {
+    let result: D1Result
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("\(result.rows.count) rows \u{00B7} \(result.rowsRead) read \u{00B7} \(result.rowsWritten) written \u{00B7} \(String(format: "%.1f", result.duration * 1000)) ms")
+                .font(.footnote).foregroundStyle(.secondary)
+            if !result.columns.isEmpty {
+                Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 4) {
+                    GridRow { ForEach(Array(result.columns.enumerated()), id: \.offset) { _, c in Text(c).fontWeight(.semibold) } }
+                    Divider()
+                    ForEach(Array(result.rows.prefix(500).enumerated()), id: \.offset) { _, row in
+                        GridRow { ForEach(Array(row.enumerated()), id: \.offset) { _, cell in Text(cell).monospaced().lineLimit(2) } }
+                    }
+                }
+                if result.rows.count > 500 { Text("Showing the first 500 rows.").font(.footnote).foregroundStyle(.secondary) }
+            }
+        }
+    }
+}
