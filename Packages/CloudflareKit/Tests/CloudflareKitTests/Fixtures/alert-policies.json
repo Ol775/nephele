@@ -1,0 +1,4 @@
+{"success":true,"errors":[],"result":[
+ {"id":"pol1","name":"Certificate alerts","alert_type":"universal_ssl_event_type","enabled":true},
+ {"id":"pol2","name":"Origin errors","alert_type":"http_alert_origin_error","enabled":false}
+],"result_info":{"page":1,"per_page":100,"total_pages":1,"total_count":2}}
