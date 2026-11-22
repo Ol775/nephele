@@ -20,11 +20,11 @@ struct SettingsView: View {
                     LabeledContent("Token") {
                         HStack { Text("\u{2022}\u{2022}\u{2022}\u{2022} \(session.tokenHint)").monospaced(); Button("Remove") { confirmRemove = true } }
                     }
-                    LabeledContent("Permissions") { Text(session.missingPermissions.isEmpty ? "All present" : "\(session.missingPermissions.count) missing").foregroundStyle(.secondary) }
+                    LabeledContent("Permissions") { Text(session.missingPermissions.isEmpty ? "No errors" : "\(session.missingPermissions.count) missing").foregroundStyle(.secondary) }
                     ForEach(session.permissions) { p in
-                        HStack { StatusDot(kind: p.granted ? .ok : .warning); Text(p.name); Spacer(); Text(p.granted ? "Granted" : "Missing").foregroundStyle(.secondary) }
+                        HStack { StatusDot(kind: p.granted ? .ok : .warning); Text(p.name); Spacer(); Text(p.granted ? "No error" : "Missing").foregroundStyle(.secondary) }
                     }
-                    Text("Screens that need a missing permission show a prompt instead of data. Edit rights are not checked until you make a change.")
+                    Text("Screens that need a missing permission show a prompt instead of data. Edit rights are not checked until you make a change. Cloudflare sometimes sends an empty list instead of an error when a permission is missing, so an empty screen can mean that too.")
                         .font(.footnote).foregroundStyle(.secondary)
                     Text("Storage: Workers KV Storage, D1 and Workers R2 Storage Read to browse; the same Edit permissions to change anything.")
                         .font(.footnote).foregroundStyle(.secondary)

@@ -76,7 +76,7 @@ struct ZeroTrustView: View {
 
     private var tunnels: some View {
         LoadStateView(state: zt.tunnels, permission: "Cloudflare Tunnel Read", isEmpty: { $0.isEmpty },
-                      emptyTitle: "No tunnels", emptyMessage: "Create one, then run the connector it gives you in the Cloudflare dashboard.", emptySymbol: "point.3.connected.trianglepath.dotted",
+                      emptyTitle: "No tunnels", emptyMessage: "Create one, then run the connector it gives you in the Cloudflare dashboard. If you expected some, check the token has Cloudflare Tunnel Read.", emptySymbol: "point.3.connected.trianglepath.dotted",
                       retry: { Task { await zt.loadAll() } }) { list in
             List(list) { t in
                 HStack {
@@ -129,7 +129,7 @@ struct ZeroTrustView: View {
 
     private var tokens: some View {
         LoadStateView(state: zt.tokens, permission: "Access: Service Tokens Read", isEmpty: { $0.isEmpty },
-                      emptyTitle: "No service tokens", emptyMessage: "Create one for a script or service that needs to pass Access.", emptySymbol: "key",
+                      emptyTitle: "No service tokens", emptyMessage: "Create one for a script or service that needs to pass Access. If you expected some, check the token has Access: Service Tokens Read.", emptySymbol: "key",
                       retry: { Task { await zt.loadAll() } }) { list in
             List(list) { t in
                 HStack {
