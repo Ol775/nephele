@@ -1,0 +1,1 @@
+{"success":true,"errors":[],"messages":[],"result":[{"id":"a1","name":"Vault","domain":"vault.example.dev","type":"self_hosted","session_duration":"24h","policies":[{"id":"p1"},{"id":"p2"}]},{"id":"a2","name":"Bare"}],"result_info":{"page":1,"per_page":100,"total_pages":1,"count":2,"total_count":2}}
