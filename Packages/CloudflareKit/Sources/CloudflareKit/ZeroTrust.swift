@@ -48,9 +48,12 @@ public struct ServiceToken: Codable, Sendable, Equatable, Hashable, Identifiable
 }
 
 /// Cloudflare returns the secret once, on creation. It is deliberately not part of `ServiceToken`.
-public struct CreatedServiceToken: Sendable, Equatable {
+public struct CreatedServiceToken: Sendable, Equatable, CustomStringConvertible, CustomDebugStringConvertible, CustomReflectable {
     public let token: ServiceToken
     public let clientSecret: String
+    public var description: String { "CreatedServiceToken(\(token.name), secret hidden)" }
+    public var debugDescription: String { description }
+    public var customMirror: Mirror { Mirror(self, children: ["token": token]) }
 }
 
 private struct CreatedTokenWire: Decodable, Sendable { let clientSecret: String? }
@@ -96,7 +99,7 @@ extension CFClient {
         let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase
         guard let token = try? d.decode(CFEnvelope<ServiceToken>.self, from: data).result,
               let secret = try? d.decode(CFEnvelope<CreatedTokenWire>.self, from: data).result?.clientSecret, !secret.isEmpty
-        else { throw CloudflareError.decoding("Missing service token") }
+        else { throw CloudflareError.decoding("The token may have been created, but Cloudflare's reply was unexpected. Check the list before trying again.") }
         return CreatedServiceToken(token: token, clientSecret: secret)
     }
 

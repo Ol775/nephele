@@ -74,12 +74,48 @@ import CloudflareKitTesting
     @Test func forbiddenWriteTurnsWritesOffWithAHint() async throws {
         let (s, _) = try await make(denyWrites: true)
         await s.createTunnel("fresh")
-        #expect(!s.canWrite && s.formError?.contains("Cloudflare Tunnel Write") == true)
+        #expect(!s.canWrite(.tunnels) && s.formError?.contains("Cloudflare Tunnel Edit") == true)
     }
 
-    @Test func accountSwitchDropsLateResultsAndResetClears() async throws {
+    @Test func resetClearsListsButNotAPendingSecret() async throws {
         let (s, _) = try await make()
+        await s.createToken(name: "ci", duration: "8760h")
         s.reset()
-        #expect(s.tunnels.value == nil && s.newSecret == nil && s.formError == nil && s.canWrite)
+        #expect(s.tunnels.value == nil && s.formError == nil && s.canWrite(.tunnels))
+        #expect(s.newSecret?.secret == "SEKRET")
+    }
+
+    @Test func accountSwitchMidCreateKeepsTheListButStillHandsOverTheSecret() async throws {
+        final class Box: @unchecked Sendable { var session: Session? }
+        let box = Box()
+        let stub = StubServer { req in
+            let p = req.url!.path
+            if req.httpMethod == "POST" && p.hasSuffix("/service_tokens") {
+                Task { @MainActor in box.session?.selectAccount("accB") }
+                Thread.sleep(forTimeInterval: 0.1)
+                return TestAPI.reply(req, TestAPI.ok("{\"id\":\"s9\",\"name\":\"ci\",\"client_id\":\"c.access\",\"client_secret\":\"SEKRET\"}"))
+            }
+            if p.hasSuffix("/service_tokens") { return TestAPI.reply(req, TestAPI.ok("[]")) }
+            return TestAPI.base(req)
+        }
+        let session = try await TestAPI.readySession(stub); box.session = session
+        let s = ZeroTrustStore(session: session)
+        await s.loadAll()
+        await s.createToken(name: "ci", duration: "8760h")
+        #expect(s.tokens.value?.isEmpty != false)
+        #expect(s.newSecret?.secret == "SEKRET")
+    }
+
+    @Test func aDeniedWriteOnlyLocksItsOwnSection() async throws {
+        let (s, _) = try await make(denyWrites: true)
+        await s.createTunnel("fresh")
+        #expect(!s.canWrite(.tunnels) && s.canWrite(.tokens) && s.canWrite(.apps))
+    }
+
+    @Test func theSecretNeverShowsInDescriptions() async throws {
+        let (s, _) = try await make()
+        await s.createToken(name: "ci", duration: "8760h")
+        let secret = try #require(s.newSecret)
+        #expect(!"\(secret)".contains("SEKRET") && !String(reflecting: secret).contains("SEKRET") && !"\(Mirror(reflecting: secret).children.map { "\($0.value)" })".contains("SEKRET"))
     }
 }
