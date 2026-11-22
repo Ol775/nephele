@@ -19,7 +19,7 @@ import CloudflareKitTesting
     nonisolated static let meters = "{\"data\":{\"viewer\":{\"accounts\":[{\"workersInvocationsAdaptive\":[{\"sum\":{\"requests\":62000}}],\"kvOperationsAdaptiveGroups\":[{\"sum\":{\"requests\":91000},\"dimensions\":{\"actionType\":\"read\"}}],\"d1AnalyticsAdaptiveGroups\":[{\"sum\":{\"rowsRead\":1200000,\"rowsWritten\":3000}}],\"r2StorageAdaptiveGroups\":[{\"max\":{\"payloadSize\":1500000000,\"metadataSize\":0},\"dimensions\":{\"bucketName\":\"media\",\"datetime\":\"2026-11-21T14:00:00Z\"}}]}]}},\"errors\":null}"
 
     struct World {
-        let session: Session, settings: SettingsStore, nav: Navigator, domains: DomainsStore, alerts: AlertsStore, usage: UsageStore, workers: WorkersStore, storage: StorageStore, zeroTrust: ZeroTrustStore, pages: PagesStore
+        let session: Session, settings: SettingsStore, nav: Navigator, domains: DomainsStore, alerts: AlertsStore, usage: UsageStore, workers: WorkersStore, storage: StorageStore, zeroTrust: ZeroTrustStore, pages: PagesStore, turnstile: TurnstileStore
     }
 
     func world() async throws -> World {
@@ -37,6 +37,12 @@ import CloudflareKitTesting
             if path.hasSuffix("/pages/projects") { return TestAPI.reply(req, TestAPI.ok("[{\"name\":\"site\",\"subdomain\":\"site.pages.dev\",\"domains\":[\"site.pages.dev\"],\"production_branch\":\"main\"}]")) }
             if path.hasSuffix("/deployments") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"d1\",\"environment\":\"production\",\"latest_stage\":{\"status\":\"success\"}}]")) }
             if path.hasSuffix("/zones/z1/settings") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"ssl\",\"value\":\"full\",\"editable\":true},{\"id\":\"min_tls_version\",\"value\":\"1.2\"},{\"id\":\"development_mode\",\"value\":\"off\"}]")) }
+            if path.hasSuffix("/gateway/rules") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"g1\",\"name\":\"Block ads\",\"action\":\"block\",\"enabled\":true,\"filters\":[\"dns\"]}]")) }
+            if path.hasSuffix("/challenges/widgets") { return TestAPI.reply(req, TestAPI.ok("[{\"sitekey\":\"0xA\",\"name\":\"signup\",\"mode\":\"managed\",\"domains\":[\"example.dev\"]}]")) }
+            if path.hasSuffix("/email/routing/rules") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"r1\",\"enabled\":true,\"matchers\":[{\"type\":\"literal\",\"field\":\"to\",\"value\":\"hi@example.dev\"}],\"actions\":[{\"type\":\"forward\",\"value\":[\"me@e.com\"]}]}]")) }
+            if path.hasSuffix("/email/routing/addresses") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"d1\",\"email\":\"me@e.com\",\"verified\":\"2026-01-01T00:00:00Z\"}]")) }
+            if path.hasSuffix("/email/routing") { return TestAPI.reply(req, TestAPI.ok("{\"enabled\":true}")) }
+            if path.hasSuffix("/entrypoint") { return TestAPI.reply(req, TestAPI.ok("{\"id\":\"rs\",\"rules\":[{\"id\":\"r1\",\"action\":\"block\",\"expression\":\"(ip.src eq 1.2.3.4)\",\"description\":\"Bad IP\",\"enabled\":true}]}")) }
             if path.hasSuffix("/schedules") { return TestAPI.reply(req, TestAPI.ok("{\"schedules\":[{\"cron\":\"*/30 * * * *\"}]}")) }
             if path.hasSuffix("/alerting/v3/history") { return TestAPI.reply(req, TestAPI.ok(Self.history)) }
             if path.hasSuffix("/graphql") {
@@ -52,12 +58,12 @@ import CloudflareKitTesting
         let alerts = AlertsStore(session: session, defaults: defaults)
         let usage = UsageStore(session: session, domains: domains)
         await usage.load(); await alerts.load()
-        return World(session: session, settings: settings, nav: Navigator(), domains: domains, alerts: alerts, usage: usage, workers: WorkersStore(session: session), storage: StorageStore(session: session), zeroTrust: ZeroTrustStore(session: session), pages: PagesStore(session: session))
+        return World(session: session, settings: settings, nav: Navigator(), domains: domains, alerts: alerts, usage: usage, workers: WorkersStore(session: session), storage: StorageStore(session: session), zeroTrust: ZeroTrustStore(session: session), pages: PagesStore(session: session), turnstile: TurnstileStore(session: session))
     }
 
     func render<V: View>(_ name: String, _ view: V, _ w: World, size: CGSize = CGSize(width: 1100, height: 720)) throws -> Int {
         let root = view
-            .environment(w.settings).environment(w.session).environment(w.nav).environment(w.domains).environment(w.alerts).environment(w.usage).environment(w.workers).environment(w.storage).environment(w.zeroTrust).environment(w.pages)
+            .environment(w.settings).environment(w.session).environment(w.nav).environment(w.domains).environment(w.alerts).environment(w.usage).environment(w.workers).environment(w.storage).environment(w.zeroTrust).environment(w.pages).environment(w.turnstile)
             .environment(\.nepheleTheme, NepheleTheme(w.settings.settings))
             .frame(width: size.width, height: size.height)
         let host = NSHostingView(rootView: root)
@@ -146,6 +152,22 @@ import CloudflareKitTesting
         let w = try await world(); await w.zeroTrust.loadAll()
         #expect(try render("zero-trust", ZeroTrustView(), w) > 5_000)
         #expect(try render("zero-trust-secret", SecretSheet(secret: NewServiceSecret(name: "ci", clientID: "c.access", secret: "s3cr3t")) {}, w, size: CGSize(width: 480, height: 260)) > 2_000)
+    }
+    @Test func turnstileRenders() async throws {
+        let w = try await world(); await w.turnstile.load()
+        #expect(try render("turnstile", TurnstileView(), w) > 5_000)
+    }
+    @Test func gatewayTabRenders() async throws {
+        let w = try await world(); await w.zeroTrust.loadAll()
+        #expect(w.zeroTrust.gateway.value?.count == 1)
+    }
+    @Test func emailRoutingRenders() async throws {
+        let w = try await world()
+        #expect(try render("email-routing", NavigationStack { EmailRoutingView(zone: TestAPI.zone, session: w.session) }, w) > 5_000)
+    }
+    @Test func firewallRenders() async throws {
+        let w = try await world()
+        #expect(try render("firewall", NavigationStack { FirewallView(zone: TestAPI.zone, session: w.session) }, w) > 5_000)
     }
     @Test func pagesRenders() async throws {
         let w = try await world(); await w.pages.load(); await w.pages.select(w.pages.projects.value?.first)

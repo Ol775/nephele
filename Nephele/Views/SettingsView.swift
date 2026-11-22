@@ -31,6 +31,8 @@ struct SettingsView: View {
                         .font(.footnote).foregroundStyle(.secondary)
                     Text("Domain settings: Zone Settings Read to see SSL/TLS, security and caching; Zone Settings Edit to change them; Cache Purge to purge.")
                         .font(.footnote).foregroundStyle(.secondary)
+                    Text("Email Routing: Email Routing Rules Read and Email Routing Addresses Read to browse; Email Routing Rules Edit to change. WAF rules: Zone WAF Read and Edit. Turnstile: Turnstile Sites Read and Edit. Gateway: Zero Trust Read and Edit.")
+                        .font(.footnote).foregroundStyle(.secondary)
                     Text("Zero Trust: Cloudflare Tunnel, Access: Apps and Policies and Access: Service Tokens Read to browse; the Write permissions to create or delete.")
                         .font(.footnote).foregroundStyle(.secondary)
                     Text("Workers: Workers Scripts Read to browse; Workers Scripts Edit to change settings, code and deployments; Workers Tail Read for live logs; Workers Routes Read and Edit (per zone) for routes.")

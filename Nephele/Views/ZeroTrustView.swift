@@ -3,7 +3,7 @@ import AppKit
 import CloudflareKit
 
 enum ZeroTrustTab: String, CaseIterable, Identifiable {
-    case tunnels = "Tunnels", apps = "Applications", tokens = "Service tokens"
+    case tunnels = "Tunnels", apps = "Applications", tokens = "Service tokens", gateway = "Gateway"
     var id: String { rawValue }
 }
 
@@ -17,15 +17,15 @@ struct ZeroTrustView: View {
     @State private var duration = "8760h"
     @State private var working = false
 
-    private var section: ZeroTrustSection { tab == .tunnels ? .tunnels : (tab == .apps ? .apps : .tokens) }
+    private var section: ZeroTrustSection { switch tab { case .tunnels: .tunnels; case .apps: .apps; case .tokens: .tokens; case .gateway: .gateway } }
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
                 Picker("Section", selection: $tab) { ForEach(ZeroTrustTab.allCases) { Text($0.rawValue).tag($0) } }
-                    .pickerStyle(.segmented).labelsHidden().frame(maxWidth: 380)
+                    .pickerStyle(.segmented).labelsHidden().frame(maxWidth: 480)
                 Spacer()
-                if tab != .apps { Button("New", systemImage: "plus") { newName = ""; zt.formError = nil; creating = true }.disabled(!zt.canWrite(section)) }
+                if tab == .tunnels || tab == .tokens { Button("New", systemImage: "plus") { newName = ""; zt.formError = nil; creating = true }.disabled(!zt.canWrite(section)) }
             }.padding()
             if !zt.canWrite(section) { Label("This token can't change this. Add \(section.editPermission) to it in Cloudflare.", systemImage: "lock").foregroundStyle(.secondary).padding(.horizontal).padding(.bottom, 8) }
             if let error = zt.formError, deleting == nil, !creating { Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.red).padding(.horizontal).padding(.bottom, 8) }
@@ -35,6 +35,7 @@ struct ZeroTrustView: View {
                 case .tunnels: tunnels
                 case .apps: apps
                 case .tokens: tokens
+                case .gateway: gateway
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -108,6 +109,24 @@ struct ZeroTrustView: View {
         }
     }
 
+    private var gateway: some View {
+        LoadStateView(state: zt.gateway, permission: "Zero Trust Read", isEmpty: { $0.isEmpty },
+                      emptyTitle: "No Gateway rules", emptyMessage: "Create Gateway rules in the Cloudflare dashboard; they appear here.", emptySymbol: "network.badge.shield.half.filled",
+                      retry: { Task { await zt.loadAll() } }) { list in
+            List(list) { g in
+                HStack {
+                    StatusDot(kind: g.enabled == false ? .muted : .ok)
+                    VStack(alignment: .leading) {
+                        Text(g.name)
+                        Text([g.action.map { $0.replacingOccurrences(of: "_", with: " ").capitalized }, g.filters?.joined(separator: ", "), g.enabled == false ? "Off" : nil].compactMap { $0 }.joined(separator: " \u{00B7} ")).font(.footnote).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Delete\u{2026}", role: .destructive) { zt.formError = nil; deleting = .gateway(g) }.disabled(!zt.canWrite(section))
+                }
+            }
+        }
+    }
+
     private var tokens: some View {
         LoadStateView(state: zt.tokens, permission: "Access: Service Tokens Read", isEmpty: { $0.isEmpty },
                       emptyTitle: "No service tokens", emptyMessage: "Create one for a script or service that needs to pass Access.", emptySymbol: "key",
@@ -130,14 +149,16 @@ struct ZeroTrustView: View {
 /// The one place a service token's secret is ever shown.
 struct SecretSheet: View {
     let secret: NewServiceSecret
+    var idLabel = "Client ID"
+    var secretLabel = "Client secret"
     var done: () -> Void
     @State private var copied = false
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Copy the secret for \(secret.name) now").font(.headline)
             Text("Cloudflare shows it once. Nephele doesn't keep it, and it can't be shown again.").foregroundStyle(.secondary)
-            if let id = secret.clientID { LabeledContent("Client ID") { Text(id).monospaced().textSelection(.enabled) } }
-            LabeledContent("Client secret") { Text(secret.secret).monospaced().textSelection(.enabled).lineLimit(2) }
+            if let id = secret.clientID { LabeledContent(idLabel) { Text(id).monospaced().textSelection(.enabled) } }
+            LabeledContent(secretLabel) { Text(secret.secret).monospaced().textSelection(.enabled).lineLimit(2) }
             HStack {
                 Button(copied ? "Copied" : "Copy secret", systemImage: "doc.on.doc") {
                     let pb = NSPasteboard.general

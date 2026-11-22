@@ -3,16 +3,16 @@ import Observation
 import CloudflareKit
 
 enum ZeroTrustTarget: Equatable, Sendable, Identifiable {
-    case tunnel(Tunnel), app(AccessApp), token(ServiceToken)
-    var name: String { switch self { case .tunnel(let t): t.name; case .app(let a): a.name; case .token(let t): t.name } }
-    var id: String { switch self { case .tunnel(let t): "t-\(t.id)"; case .app(let a): "a-\(a.id)"; case .token(let t): "s-\(t.id)" } }
-    var kind: String { switch self { case .tunnel: "tunnel"; case .app: "application"; case .token: "service token" } }
-    var section: ZeroTrustSection { switch self { case .tunnel: .tunnels; case .app: .apps; case .token: .tokens } }
+    case tunnel(Tunnel), app(AccessApp), token(ServiceToken), gateway(GatewayRule)
+    var name: String { switch self { case .tunnel(let t): t.name; case .app(let a): a.name; case .token(let t): t.name; case .gateway(let g): g.name } }
+    var id: String { switch self { case .tunnel(let t): "t-\(t.id)"; case .app(let a): "a-\(a.id)"; case .token(let t): "s-\(t.id)"; case .gateway(let g): "g-\(g.id)" } }
+    var kind: String { switch self { case .tunnel: "tunnel"; case .app: "application"; case .token: "service token"; case .gateway: "Gateway rule" } }
+    var section: ZeroTrustSection { switch self { case .tunnel: .tunnels; case .app: .apps; case .token: .tokens; case .gateway: .gateway } }
 }
 
 enum ZeroTrustSection: Hashable, Sendable {
-    case tunnels, apps, tokens
-    var editPermission: String { switch self { case .tunnels: "Cloudflare Tunnel Edit"; case .apps: "Access: Apps and Policies Edit"; case .tokens: "Access: Service Tokens Edit" } }
+    case tunnels, apps, tokens, gateway
+    var editPermission: String { switch self { case .tunnels: "Cloudflare Tunnel Edit"; case .apps: "Access: Apps and Policies Edit"; case .tokens: "Access: Service Tokens Edit"; case .gateway: "Zero Trust Edit" } }
 }
 
 /// Shown once, right after creation. Held only here until dismissed.
@@ -28,6 +28,7 @@ final class ZeroTrustStore {
     private(set) var tunnels: LoadState<[Tunnel]> = .idle
     private(set) var apps: LoadState<[AccessApp]> = .idle
     private(set) var tokens: LoadState<[ServiceToken]> = .idle
+    private(set) var gateway: LoadState<[GatewayRule]> = .idle
     private(set) var denied: Set<ZeroTrustSection> = []
     func canWrite(_ section: ZeroTrustSection) -> Bool { !denied.contains(section) }
     private(set) var newSecret: NewServiceSecret?
@@ -36,7 +37,7 @@ final class ZeroTrustStore {
     @ObservationIgnored let session: Session
     init(session: Session) { self.session = session }
 
-    func reset() { tunnels = .idle; apps = .idle; tokens = .idle; denied = []; formError = nil }  // a freshly created secret survives: it can never be shown again
+    func reset() { tunnels = .idle; apps = .idle; tokens = .idle; gateway = .idle; denied = []; formError = nil }  // a freshly created secret survives: it can never be shown again
 
     private var account: String? { session.selectedAccountID }
 
@@ -44,6 +45,7 @@ final class ZeroTrustStore {
         await load(\.tunnels) { try await $0.tunnels(accountID: $1).sorted { $0.name.lowercased() < $1.name.lowercased() } }
         await load(\.apps) { try await $0.accessApps(accountID: $1).sorted { $0.name.lowercased() < $1.name.lowercased() } }
         await load(\.tokens) { try await $0.serviceTokens(accountID: $1).sorted { $0.name.lowercased() < $1.name.lowercased() } }
+        await load(\.gateway) { try await $0.gatewayRules(accountID: $1).sorted { ($0.precedence ?? 0, $0.name) < ($1.precedence ?? 0, $1.name) } }
     }
 
     private func load<T: Sendable>(_ key: ReferenceWritableKeyPath<ZeroTrustStore, LoadState<T>>, _ fetch: (CFClient, String) async throws -> T) async {
@@ -102,6 +104,10 @@ final class ZeroTrustStore {
                 try await client.deleteServiceToken(accountID: account, id: t.id)
                 guard isCurrent() else { return }
                 self.tokens = .loaded((self.tokens.value ?? []).filter { $0.id != t.id })
+            case .gateway(let g):
+                try await client.deleteGatewayRule(accountID: account, id: g.id)
+                guard isCurrent() else { return }
+                self.gateway = .loaded((self.gateway.value ?? []).filter { $0.id != g.id })
             }
         }
     }

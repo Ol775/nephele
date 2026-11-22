@@ -25,6 +25,7 @@ struct AppShell: View {
                 case .workers: WorkersView()
                 case .storage: StorageView()
                 case .zeroTrust: ZeroTrustView()
+                case .turnstile: TurnstileView()
                 case .pages: PagesView()
                 case .alerts: AlertsView()
                 case .usage: UsageView()

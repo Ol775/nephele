@@ -10,6 +10,8 @@ struct DNSDetailView: View {
     @State private var proxied = false
     @State private var editing: DNSRecord?
     @State private var showSettings = false
+    @State private var showEmail = false
+    @State private var showFirewall = false
 
     private let session: Session
     init(zone: Zone, session: Session) {
@@ -47,8 +49,14 @@ struct DNSDetailView: View {
             addForm
         }
         .navigationTitle(store.zone.name)
-        .toolbar { ToolbarItem { Button("Settings", systemImage: "gearshape") { showSettings = true } } }
+        .toolbar {
+            ToolbarItem { Button("Email", systemImage: "envelope") { showEmail = true } }
+            ToolbarItem { Button("Firewall", systemImage: "shield") { showFirewall = true } }
+            ToolbarItem { Button("Settings", systemImage: "gearshape") { showSettings = true } }
+        }
         .navigationDestination(isPresented: $showSettings) { ZoneSettingsView(zone: store.zone, session: session) }
+        .navigationDestination(isPresented: $showEmail) { EmailRoutingView(zone: store.zone, session: session) }
+        .navigationDestination(isPresented: $showFirewall) { FirewallView(zone: store.zone, session: session) }
         .task { await store.load() }
         .confirmationDialog(dialogTitle, isPresented: Binding(get: { store.pending != nil }, set: { if !$0 { store.dialogDismissed() } }), presenting: store.pending) { action in
             Button(action.kind == .delete ? "Delete \(action.record.type) record" : (action.record.proxied == true ? "Switch to DNS only" : "Proxy through Cloudflare"), role: action.kind == .delete ? .destructive : nil) {
