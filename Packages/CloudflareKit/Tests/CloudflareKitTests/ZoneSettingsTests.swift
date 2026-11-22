@@ -35,9 +35,12 @@ import CloudflareKitTesting
     }
 
     @Test func purgeUrlsAreValidatedAndCapped() {
+        #expect(PurgeURLs.parse((0..<100).map { "https://a.dev/\($0)" }.joined(separator: "\n")).isSuccess)
         #expect(PurgeURLs.parse("https://a.dev/x\n  https://a.dev/y  \n\n") == .success(["https://a.dev/x", "https://a.dev/y"]))
         #expect(PurgeURLs.parse("   ") == .failure(.empty))
         #expect(PurgeURLs.parse("a.dev/x") == .failure(.notURL("a.dev/x")))
-        #expect(PurgeURLs.parse((0..<31).map { "https://a.dev/\($0)" }.joined(separator: "\n")) == .failure(.tooMany))
+        #expect(PurgeURLs.parse((0..<101).map { "https://a.dev/\($0)" }.joined(separator: "\n")) == .failure(.tooMany))
     }
 }
+
+private extension Result { var isSuccess: Bool { if case .success = self { true } else { false } } }

@@ -17,7 +17,7 @@ struct ZoneSettingsView: View {
                       emptyTitle: "", emptyMessage: "", emptySymbol: "gearshape", retry: { Task { await store.load() } }) { _ in
             Form {
                 if !store.canChange { Section { Label("This token can't change settings. Add Zone Settings Edit to it in Cloudflare.", systemImage: "lock").foregroundStyle(.secondary) } }
-                if let e = store.formError, !purgingAll { Section { Label(e, systemImage: "exclamationmark.triangle").foregroundStyle(.red) } }
+                if let e = store.formError, !purgingAll, store.canChange || e != StorageCopy.editHint("Zone Settings Edit") { Section { Label(e, systemImage: "exclamationmark.triangle").foregroundStyle(.red) } }
                 if let n = store.notice { Section { Label(n, systemImage: "checkmark.circle").foregroundStyle(.secondary) } }
                 Section("SSL/TLS") {
                     picker("Encryption mode", ZoneSettingID.ssl, Self.sslModes)
@@ -41,6 +41,12 @@ struct ZoneSettingsView: View {
         }
         .navigationTitle("\(store.zone.name) settings")
         .task { await store.load() }
+        .confirmationDialog(store.confirm.pending.map { _ in "Change this setting?" } ?? "",
+                            isPresented: Binding(get: { store.confirm.pending != nil }, set: { if !$0 { store.confirm.dialogDismissed() } }),
+                            presenting: store.confirm.pending) { change in
+            Button("Change it", role: .destructive) { Task { await store.confirmChange(change) } }
+            Button("Cancel", role: .cancel) { store.confirm.cancel() }
+        } message: { Text($0.message) }
         .sheet(isPresented: $purgingAll) {
             TypedConfirmSheet(title: "Purge everything?", message: "Every cached file for this domain is dropped, so visitors hit your origin until the cache refills. Type the domain name to confirm.",
                               name: store.zone.name, buttonLabel: "Purge cache", error: store.formError,
@@ -49,7 +55,7 @@ struct ZoneSettingsView: View {
     }
 
     private func picker(_ title: String, _ id: String, _ options: [(String, String)]) -> some View {
-        Picker(title, selection: Binding(get: { store.value(id) ?? "" }, set: { v in Task { await store.set(id, v) } })) {
+        Picker(title, selection: Binding(get: { store.value(id) ?? "" }, set: { v in Task { await store.request(id, v) } })) {
             if store.value(id).map({ v in !options.contains { $0.0 == v } }) == true { Text(store.value(id) ?? "").tag(store.value(id) ?? "") }
             ForEach(options, id: \.0) { Text($0.1).tag($0.0) }
         }
@@ -57,7 +63,7 @@ struct ZoneSettingsView: View {
     }
 
     private func toggle(_ title: String, _ id: String, onWhen: @escaping (String) -> Bool = { $0 == "on" }) -> some View {
-        Toggle(title, isOn: Binding(get: { store.value(id).map(onWhen) ?? false }, set: { v in Task { await store.set(id, v ? "on" : "off") } }))
+        Toggle(title, isOn: Binding(get: { store.value(id).map(onWhen) ?? false }, set: { v in Task { await store.request(id, v ? "on" : "off") } }))
             .disabled(!store.editable(id) || store.value(id) == nil || store.busy.contains(id))
     }
 }

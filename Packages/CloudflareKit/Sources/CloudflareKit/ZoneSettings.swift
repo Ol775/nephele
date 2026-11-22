@@ -43,14 +43,14 @@ public enum PurgeURLError: Error, Equatable, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .empty: "Enter at least one URL."
-        case .tooMany: "Cloudflare purges at most 30 URLs at a time."
+        case .tooMany: "Cloudflare purges at most 100 URLs at a time."
         case .notURL(let s): "\u{201C}\(s)\u{201D} isn't a full URL. Start it with https://."
         }
     }
 }
 
 public enum PurgeURLs {
-    public static let limit = 30
+    public static let limit = 100
     /// One URL per line. Blank lines are ignored.
     public static func parse(_ text: String) -> Result<[String], PurgeURLError> {
         let lines = text.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }

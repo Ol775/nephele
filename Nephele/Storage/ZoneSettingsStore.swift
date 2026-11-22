@@ -2,6 +2,28 @@ import Foundation
 import Observation
 import CloudflareKit
 
+/// A setting change that can take a site down, so it is confirmed first.
+struct ZoneChange: Equatable, Sendable {
+    let id: String, value: String
+    static func isRisky(_ id: String, _ value: String) -> Bool {
+        switch id {
+        case ZoneSettingID.ssl: ["off", "flexible", "strict"].contains(value)
+        case ZoneSettingID.securityLevel: value == "under_attack"
+        case ZoneSettingID.minTLS: value == "1.3"
+        default: false
+        }
+    }
+    var message: String {
+        switch (id, value) {
+        case (ZoneSettingID.ssl, "flexible"): "If your origin already redirects HTTP to HTTPS, visitors get a redirect loop and the site stops loading."
+        case (ZoneSettingID.ssl, "strict"): "If your origin's certificate is self-signed or expired, visitors get a 526 error straight away."
+        case (ZoneSettingID.ssl, _): "HTTPS stops working for this domain. With Always use HTTPS on, visitors are sent to a page that fails."
+        case (ZoneSettingID.securityLevel, _): "Every visitor gets a JavaScript challenge, which breaks API clients, webhooks and monitors."
+        default: "Older browsers and tools that don't support TLS 1.3 can no longer connect."
+        }
+    }
+}
+
 /// SSL/TLS, security and caching settings for one zone, plus cache purge.
 @MainActor @Observable
 final class ZoneSettingsStore {
@@ -12,6 +34,7 @@ final class ZoneSettingsStore {
     private(set) var busy: Set<String> = []
     private(set) var notice: String?
     var formError: String?
+    let confirm = ConfirmGate<ZoneChange>()
 
     @ObservationIgnored let session: Session
     init(zone: Zone, session: Session) { self.zone = zone; self.session = session }
@@ -30,8 +53,19 @@ final class ZoneSettingsStore {
         } catch let error as CloudflareError {
             guard epoch == session.identityEpoch else { return }
             session.handle(error)
-            if settings.value == nil { settings = .failed(error) }
-        } catch { if settings.value == nil { settings = .failed(.transport("unknown")) } }
+            if settings.value == nil { settings = .failed(error) } else { formError = error.errorDescription }
+        } catch { if settings.value == nil { settings = .failed(.transport("unknown")) } else { formError = "Couldn't refresh the settings." } }
+    }
+
+    /// Asks first when the change could break the site.
+    func request(_ id: String, _ value: String) async {
+        if ZoneChange.isRisky(id, value) { formError = nil; notice = nil; confirm.request(ZoneChange(id: id, value: value)) }
+        else { await set(id, value) }
+    }
+
+    func confirmChange(_ change: ZoneChange) async {
+        guard confirm.take(change) else { return }
+        await set(change.id, change.value)
     }
 
     func set(_ id: String, _ newValue: String) async {
@@ -48,9 +82,11 @@ final class ZoneSettingsStore {
         } catch let error as CloudflareError {
             guard epoch == session.identityEpoch else { return }
             session.handle(error)
-            if case .permissionDenied = error { canChange = false; formError = StorageCopy.editHint("Zone Settings Edit") }
+            if case .permissionDenied(let why) = error, Self.isAboutToken(why) { canChange = false; formError = StorageCopy.editHint("Zone Settings Edit") }
+            else if case .permissionDenied(let why?) = error { formError = why }
             else { formError = error.errorDescription }
-        } catch { formError = "Couldn't save that change." }
+            await load()  // the change may have landed before the error (a timeout), so show what Cloudflare really has
+        } catch { formError = "Couldn't save that change."; await load() }
     }
 
     func purgeEverything(typedName: String) async {
@@ -77,8 +113,14 @@ final class ZoneSettingsStore {
         } catch let error as CloudflareError {
             guard epoch == session.identityEpoch else { return }
             session.handle(error)
-            if case .permissionDenied = error { canPurge = false; formError = StorageCopy.editHint("Cache Purge") }
+            if case .permissionDenied(let why) = error, Self.isAboutToken(why) { canPurge = false; formError = StorageCopy.editHint("Cache Purge") }
             else { formError = error.errorDescription }
         } catch { formError = "Couldn't purge the cache." }
+    }
+
+    /// A 403 only means "the token lacks the permission" when Cloudflare says nothing else (plan limits and the like name themselves).
+    private static func isAboutToken(_ why: String?) -> Bool {
+        guard let m = why?.lowercased() else { return true }
+        return m.contains("auth") || m.contains("permission")
     }
 }
