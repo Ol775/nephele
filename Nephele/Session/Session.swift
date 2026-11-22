@@ -25,6 +25,9 @@ final class Session {
     private(set) var tokenHint = ""
     private(set) var signInError: String?
     private(set) var canRetryRestore = false
+    /// True while the stored token is being read from the Keychain. After an update macOS may hold that read
+    /// behind a permission prompt, so it runs off the main thread and the window says what it is waiting for.
+    private(set) var readingKeychain = false
     /// Stores compare this to the value they last loaded at; bumping it makes every store refetch.
     private(set) var cacheEpoch = 0
     /// Bumps when the signed-in identity changes (sign in, sign out, account switch) so stores drop their data.
@@ -55,7 +58,12 @@ final class Session {
 
     /// Uses the stored token at launch. A network failure keeps the token so the user can retry.
     func restore() async {
-        guard state == .signedOut, let token = tokenStore.load() else { return }
+        guard state == .signedOut, !readingKeychain else { return }
+        readingKeychain = true
+        let store = tokenStore
+        let stored = await Task.detached { store.load() }.value
+        readingKeychain = false
+        guard state == .signedOut, let token = stored else { return }
         canRetryRestore = false
         do {
             try await establish(token: token, persist: false)

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.1.3
+- **Updates:** the saved token is read off the main thread, so after an update the window opens straight away and says it is waiting for the macOS Keychain prompt instead of appearing frozen with no window.
+
 ## 0.1.2
 - **Sign-in:** a Full access level, and each level lists the permissions Cloudflare's link can't pre-tick.
 - **Permissions:** Settings no longer claims "All present"; it says "No errors" and notes that an empty list can mean a missing permission. Empty Tunnels and Service tokens screens name the permission to check.

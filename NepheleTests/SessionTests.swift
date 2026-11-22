@@ -181,6 +181,12 @@ import CloudflareKitTesting
         #expect(s.state == .ready)
     }
 
+    @Test func restoreClearsTheKeychainWaitingFlag() async throws {
+        let s = Session(tokenStore: TokenStore(service: "nephele.test.\(UUID().uuidString)"))
+        await s.restore()
+        #expect(!s.readingKeychain && s.state == .signedOut)
+    }
+
     @Test func restoreWithNoStoredTokenStaysSignedOut() async {
         let store = tokenStore()
         let s = session(server(), store)

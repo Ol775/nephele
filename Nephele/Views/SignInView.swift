@@ -9,6 +9,20 @@ struct SignInView: View {
     @State private var access = TokenAccess.readOnly
 
     var body: some View {
+        if session.readingKeychain { keychainWait } else { form }
+    }
+
+    private var keychainWait: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+            Text("Waiting for Keychain access").font(.title3.bold())
+            Text("macOS may be asking whether Nephele can use your saved token, often after an update. Choose Always Allow. If you don't see the prompt, look behind other windows.")
+                .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: 380)
+        }
+        .padding(40).frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var form: some View {
         VStack(spacing: 16) {
             Image(nsImage: NSApp?.applicationIconImage ?? NSImage()).resizable().frame(width: 72, height: 72).accessibilityHidden(true)
             Text("Connect your Cloudflare account").font(.title2.bold())
