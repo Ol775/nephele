@@ -21,8 +21,10 @@ public struct PagesDeployment: Sendable, Equatable, Hashable, Identifiable, Deco
     public let createdOn: String?
     public let latestStage: PagesStage?
     public let trigger: PagesTrigger?
+    /// Branch aliases such as feat.site.pages.dev. Deleting a deployment that has one needs `force`.
+    public let aliases: [String]?
 
-    private enum CodingKeys: String, CodingKey { case id, shortId, environment, url, createdOn, latestStage, deploymentTrigger }
+    private enum CodingKeys: String, CodingKey { case id, shortId, environment, url, createdOn, latestStage, deploymentTrigger, aliases }
     private struct Trigger: Decodable, Sendable { let metadata: PagesTrigger? }
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -33,24 +35,28 @@ public struct PagesDeployment: Sendable, Equatable, Hashable, Identifiable, Deco
         createdOn = try c.decodeIfPresent(String.self, forKey: .createdOn)
         latestStage = try c.decodeIfPresent(PagesStage.self, forKey: .latestStage)
         trigger = try c.decodeIfPresent(Trigger.self, forKey: .deploymentTrigger)?.metadata
+        aliases = try? c.decodeIfPresent([String].self, forKey: .aliases)
     }
     public init(id: String, environment: String? = nil, status: String? = nil) {
         self.id = id; shortId = nil; self.environment = environment; url = nil; createdOn = nil
-        latestStage = PagesStage(name: nil, status: status); trigger = nil
+        latestStage = PagesStage(name: nil, status: status); trigger = nil; aliases = nil
     }
 }
 
-public struct PagesProject: Codable, Sendable, Equatable, Hashable, Identifiable {
+public struct PagesProject: Decodable, Sendable, Equatable, Hashable, Identifiable {
     public let name: String
     public let subdomain: String?
     public let domains: [String]?
     public let productionBranch: String?
     public let createdOn: String?
     public let latestDeployment: PagesDeployment?
+    /// The deployment currently live in production.
+    public let canonicalDeploymentID: String?
     public var id: String { name }
-    public init(name: String) { self.name = name; subdomain = nil; domains = nil; productionBranch = nil; createdOn = nil; latestDeployment = nil }
+    public init(name: String) { self.name = name; subdomain = nil; domains = nil; productionBranch = nil; createdOn = nil; latestDeployment = nil; canonicalDeploymentID = nil }
 
-    private enum CodingKeys: String, CodingKey { case name, subdomain, domains, productionBranch, createdOn, latestDeployment }
+    private enum CodingKeys: String, CodingKey { case name, subdomain, domains, productionBranch, createdOn, latestDeployment, canonicalDeployment }
+    private struct Ref: Decodable, Sendable { let id: String? }
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         name = try c.decode(String.self, forKey: .name)
@@ -59,8 +65,8 @@ public struct PagesProject: Codable, Sendable, Equatable, Hashable, Identifiable
         productionBranch = try c.decodeIfPresent(String.self, forKey: .productionBranch)
         createdOn = try c.decodeIfPresent(String.self, forKey: .createdOn)
         latestDeployment = try? c.decodeIfPresent(PagesDeployment.self, forKey: .latestDeployment)
+        canonicalDeploymentID = (try? c.decodeIfPresent(Ref.self, forKey: .canonicalDeployment))?.id
     }
-    public func encode(to encoder: any Encoder) throws { var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(name, forKey: .name) }
 }
 
 extension CFClient {
@@ -85,8 +91,9 @@ extension CFClient {
         _ = try await raw("POST", "\(depBase(accountID, project))/\(pathSegment(id))/rollback")
     }
 
-    public func deletePagesDeployment(accountID: String, project: String, id: String) async throws {
-        _ = try await raw("DELETE", "\(depBase(accountID, project))/\(pathSegment(id))")
+    /// `force` is needed for a preview deployment that still has a branch alias.
+    public func deletePagesDeployment(accountID: String, project: String, id: String, force: Bool = false) async throws {
+        _ = try await raw("DELETE", "\(depBase(accountID, project))/\(pathSegment(id))", query: force ? [URLQueryItem(name: "force", value: "true")] : [])
     }
 
     public func deletePagesProject(accountID: String, name: String) async throws {

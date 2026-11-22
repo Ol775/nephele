@@ -38,4 +38,17 @@ import CloudflareKitTesting
         #expect(r[2] == ("DELETE", "/client/v4/accounts/acc1/pages/projects/site/deployments/d1"))
         #expect(r[3] == ("DELETE", "/client/v4/accounts/acc1/pages/projects/site"))
     }
+
+    @Test func aliasesAndCanonicalDeploymentDecodeAndForceAddsTheQuery() async throws {
+        let body = "{\"success\":true,\"errors\":[],\"result\":[{\"name\":\"site\",\"canonical_deployment\":{\"id\":\"live1\"}}],\"result_info\":{\"page\":1,\"per_page\":10,\"total_pages\":1,\"count\":1,\"total_count\":1}}"
+        let dep = "{\"success\":true,\"errors\":[],\"result\":[{\"id\":\"d1\",\"aliases\":[\"feat.site.pages.dev\"]}]}"
+        let stub = StubServer { req in (StubURLProtocol.response(req.url!), Data((req.url!.path.hasSuffix("/projects") ? body : dep).utf8)) }
+        let c = client(stub)
+        #expect(try await c.pagesProjects(accountID: "a")[0].canonicalDeploymentID == "live1")
+        #expect(try await c.pagesDeployments(accountID: "a", project: "site")[0].aliases == ["feat.site.pages.dev"])
+        let del = StubServer { req in (StubURLProtocol.response(req.url!), Data("{\"success\":true,\"errors\":[],\"result\":null}".utf8)) }
+        try await client(del).deletePagesDeployment(accountID: "a", project: "site", id: "d1", force: true)
+        try await client(del).deletePagesDeployment(accountID: "a", project: "site", id: "d1")
+        #expect(del.recorded[0].request.url?.query == "force=true" && del.recorded[1].request.url?.query == nil)
+    }
 }

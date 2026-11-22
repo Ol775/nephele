@@ -68,4 +68,52 @@ import CloudflareKitTesting
         await s.select(s.projects.value?.first); s.reset()
         #expect(s.projects.value == nil && s.selected == nil && s.deployments.value == nil && s.canWrite)
     }
+
+    @Test func deleteOfAnAliasedPreviewSendsForce() async throws {
+        let stub = StubServer { req in
+            if req.httpMethod == "DELETE" { return TestAPI.reply(req, TestAPI.ok("null")) }
+            if req.url!.path.hasSuffix("/deployments") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"d1\",\"environment\":\"preview\",\"aliases\":[\"feat.site.pages.dev\"]}]")) }
+            if req.url!.path.hasSuffix("/pages/projects") { return TestAPI.reply(req, TestAPI.ok("[{\"name\":\"site\",\"canonical_deployment\":{\"id\":\"live\"}}]")) }
+            return TestAPI.base(req)
+        }
+        let s = PagesStore(session: try await TestAPI.readySession(stub))
+        await s.load(); await s.select(s.projects.value?.first)
+        let d = try #require(s.deployments.value?.first)
+        s.request(.delete(d))
+        #expect(s.confirm.pending?.message(project: "site").contains("feat.site.pages.dev") == true)
+        await s.confirmChange(try #require(s.confirm.pending))
+        #expect(stub.recorded.last?.request.url?.query == "force=true")
+        #expect(s.isLive(PagesDeployment(id: "live")) && !s.isLive(d))
+    }
+
+    @Test func lateDeleteDoesNotTouchAnotherProjectsList() async throws {
+        final class Box: @unchecked Sendable { var store: PagesStore? }
+        let box = Box()
+        let stub = StubServer { req in
+            let p = req.url!.path
+            if req.httpMethod == "DELETE" {
+                Task { @MainActor in await box.store?.select(box.store?.projects.value?.last) }
+                Thread.sleep(forTimeInterval: 0.15)
+                return TestAPI.reply(req, TestAPI.ok("null"))
+            }
+            if p.hasSuffix("/projects/zed/deployments") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"z1\"}]")) }
+            if p.hasSuffix("/deployments") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"d1\"},{\"id\":\"d2\"}]")) }
+            if p.hasSuffix("/pages/projects") { return TestAPI.reply(req, TestAPI.ok("[{\"name\":\"site\"},{\"name\":\"zed\"}]")) }
+            return TestAPI.base(req)
+        }
+        let s = PagesStore(session: try await TestAPI.readySession(stub)); box.store = s
+        await s.load(); await s.select(s.projects.value?.first)
+        s.request(.delete(try #require(s.deployments.value?.first)))
+        await s.confirmChange(try #require(s.confirm.pending))
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(s.selected?.name == "zed" && s.deployments.value?.map(\.id) == ["z1"])
+    }
+
+    @Test func aFailedWriteErrorBelongsToItsProject() async throws {
+        let (s, _) = try await make(denyWrites: true)
+        await s.deleteProject(try #require(s.projects.value?.last), typedName: "zed")
+        #expect(s.formErrorProject == "zed")
+        await s.select(s.projects.value?.first)
+        #expect(s.formError == nil)
+    }
 }
