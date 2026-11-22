@@ -88,6 +88,25 @@ import CloudflareKitTesting
         #expect(writes(stub).first?.request.httpMethod == "PUT" && s.rules.value?.count == 2)
     }
 
+    @Test func wafCreateAfterAnAmbiguousLoadNeverOverwritesExistingRules() async throws {
+        final class Flag: @unchecked Sendable { var fail = true }
+        let flag = Flag()
+        let stub = StubServer { req in
+            if req.httpMethod != "GET" { return TestAPI.reply(req, TestAPI.ok("{\"id\":\"rs\",\"rules\":[]}")) }
+            if req.url!.path.hasSuffix("/entrypoint") {
+                if flag.fail { return TestAPI.reply(req, "{\"success\":false,\"errors\":[{\"code\":7003,\"message\":\"No route for that URI\"}],\"result\":null}", status: 404) }
+                return TestAPI.reply(req, TestAPI.ok("{\"id\":\"rs\",\"rules\":[{\"id\":\"r1\",\"action\":\"block\",\"expression\":\"true\"}]}"))
+            }
+            return TestAPI.base(req)
+        }
+        let s = FirewallStore(zone: TestAPI.zone, session: try await TestAPI.readySession(stub))
+        await s.load(); flag.fail = false
+        #expect(s.rules.value == nil)
+        s.request(.create(FirewallRuleDraft(action: "log", expression: "true", description: "")))
+        await s.confirmChange(try #require(s.confirm.pending))
+        #expect(writes(stub).map(\.request.httpMethod) == ["POST"])
+    }
+
     @Test func wafInvalidDraftNeverReachesTheConfirmation() async throws {
         let (s, stub) = try await waf()
         s.request(.create(FirewallRuleDraft(action: "block", expression: " ", description: "")))

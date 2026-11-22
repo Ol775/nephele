@@ -42,7 +42,7 @@ struct FirewallView: View {
                     TextField("Name", text: $note).frame(maxWidth: 160)
                     TextField("Expression", text: $expression).font(.body.monospaced())
                     Button("Add rule\u{2026}") { store.request(.create(FirewallRuleDraft(action: action, expression: expression, description: note))) }
-                        .disabled(!store.canWrite || store.busy || expression.allSatisfy(\.isWhitespace))
+                        .disabled(!store.canWrite || store.busy || store.rules.value == nil || expression.allSatisfy(\.isWhitespace))
                 }
             }.padding(12)
         }

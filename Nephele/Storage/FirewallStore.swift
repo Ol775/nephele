@@ -69,7 +69,10 @@ final class FirewallStore {
         await write { client, isCurrent in
             let set: FirewallRuleset
             switch change {
-            case .create(let d): set = try await client.createFirewallRule(zoneID: zone.id, rulesetID: rulesetID, d)
+            case .create(let d):
+                // Re-read first: PUT on the entrypoint replaces every rule, so only use it when Cloudflare confirms there is no ruleset.
+                let current = try await client.firewallRuleset(zoneID: zone.id)
+                set = try await client.createFirewallRule(zoneID: zone.id, rulesetID: current?.id, d)
             case .enable(let r):
                 guard let id = rulesetID else { return }
                 set = try await client.setFirewallRule(zoneID: zone.id, rulesetID: id, rule: r, enabled: true)

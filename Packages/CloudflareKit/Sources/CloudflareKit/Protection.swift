@@ -164,7 +164,7 @@ extension CFClient {
     /// nil when the zone has no custom rules yet (Cloudflare answers "not found" until the first one is added).
     public func firewallRuleset(zoneID: String) async throws -> FirewallRuleset? {
         do { return try await send("GET", "/zones/\(pathSegment(zoneID))/rulesets/phases/http_request_firewall_custom/entrypoint") }
-        catch CloudflareError.api(let code, let message) where code == 10003 || message.lowercased().contains("not found") || message.lowercased().contains("could not find") { return nil }
+        catch CloudflareError.api(let code, let message) where code == 10003 { return nil }
         catch CloudflareError.transport(let why) where why == "HTTP 404" { return nil }
     }
 
