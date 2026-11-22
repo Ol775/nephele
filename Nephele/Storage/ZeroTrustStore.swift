@@ -120,7 +120,11 @@ final class ZeroTrustStore {
         catch let error as CloudflareError {
             guard epoch == session.identityEpoch else { return }
             session.handle(error)
-            if case .permissionDenied = error { denied.insert(section); formError = StorageCopy.editHint(section.editPermission) }
+            if case .permissionDenied(let why) = error {
+                let m = why?.lowercased()
+                if m == nil || m!.contains("auth") || m!.contains("permission") { denied.insert(section); formError = StorageCopy.editHint(section.editPermission) }
+                else { formError = why }
+            }
             else { formError = error.errorDescription }
         } catch { formError = "Couldn't save that change." }
     }

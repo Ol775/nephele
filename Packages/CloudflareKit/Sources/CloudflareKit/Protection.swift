@@ -2,8 +2,14 @@ import Foundation
 
 // MARK: Email Routing (zone rules, account destination addresses)
 
-public struct EmailMatcher: Codable, Sendable, Equatable, Hashable { public let type: String; public let field: String?; public let value: String? }
-public struct EmailAction: Codable, Sendable, Equatable, Hashable { public let type: String; public let value: [String]? }
+public struct EmailMatcher: Codable, Sendable, Equatable, Hashable {
+    public let type: String; public let field: String?; public let value: String?
+    public init(type: String, field: String?, value: String?) { self.type = type; self.field = field; self.value = value }
+}
+public struct EmailAction: Codable, Sendable, Equatable, Hashable {
+    public let type: String; public let value: [String]?
+    public init(type: String, value: [String]?) { self.type = type; self.value = value }
+}
 
 public struct EmailRule: Codable, Sendable, Equatable, Hashable, Identifiable {
     public let id: String
@@ -51,9 +57,14 @@ public struct FirewallRule: Codable, Sendable, Equatable, Hashable, Identifiable
     public let expression: String
     public let description: String?
     public let enabled: Bool?
-    public init(id: String, action: String, expression: String, description: String? = nil, enabled: Bool? = nil) {
+    public let actionParameters: JSONValue?
+    public let logging: JSONValue?
+    public init(id: String, action: String, expression: String, description: String? = nil, enabled: Bool? = nil, actionParameters: JSONValue? = nil, logging: JSONValue? = nil) {
         self.id = id; self.action = action; self.expression = expression; self.description = description; self.enabled = enabled
+        self.actionParameters = actionParameters; self.logging = logging
     }
+    /// True when this model holds the whole rule. Toggling anything else would drop fields (custom block pages, skip targets, logging) on the PATCH.
+    public var isPlain: Bool { actionParameters == nil && logging == nil && FirewallRuleDraft.actions.contains(action) }
 }
 
 public struct FirewallRuleset: Codable, Sendable, Equatable, Hashable, Identifiable {
@@ -179,6 +190,7 @@ extension CFClient {
     }
 
     public func setFirewallRule(zoneID: String, rulesetID: String, rule: FirewallRule, enabled: Bool) async throws -> FirewallRuleset {
+        guard rule.isPlain else { throw CloudflareError.api(code: 0, message: "This rule has options Nephele can't show. Change it in the Cloudflare dashboard.") }
         let draft = FirewallRuleDraft(action: rule.action, expression: rule.expression, description: rule.description ?? "", enabled: enabled)
         return try await send("PATCH", "/zones/\(pathSegment(zoneID))/rulesets/\(pathSegment(rulesetID))/rules/\(pathSegment(rule.id))", body: draft)
     }
@@ -199,7 +211,7 @@ extension CFClient {
         let data = try await raw("POST", "/accounts/\(pathSegment(accountID))/challenges/widgets", body: body)
         let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase
         guard let widget = try? d.decode(CFEnvelope<TurnstileWidget>.self, from: data).result,
-              let secret = try? d.decode(CFEnvelope<TurnstileSecretWire>.self, from: data).result?.secret else { throw CloudflareError.decoding("Missing widget") }
+              let secret = try? d.decode(CFEnvelope<TurnstileSecretWire>.self, from: data).result?.secret else { throw CloudflareError.api(code: 0, message: "The widget may have been created, but its secret couldn't be read. Check Turnstile in the Cloudflare dashboard, where you can rotate the secret.") }
         return CreatedTurnstile(widget: widget, secret: secret)
     }
 

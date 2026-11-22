@@ -53,6 +53,26 @@ import CloudflareKitTesting
         #expect(s.rules.value?.isEmpty == true && writes(stub).count == 2)
     }
 
+    @Test func emailCatchAllIsNotToggledOrDeletedHereAndSubdomainsAreAllowed() async throws {
+        let (s, stub) = try await email()
+        let catchAll = EmailRule(id: "c", name: "", enabled: true, matchers: [EmailMatcher(type: "all", field: nil, value: nil)], actions: [EmailAction(type: "drop", value: nil)])
+        await s.toggle(catchAll); s.requestDelete(catchAll)
+        #expect(s.confirm.pending == nil && writes(stub).isEmpty && s.formError != nil)
+        await s.create(address: " Sub@Mail.Example.dev ", destination: "me@e.com")
+        #expect(s.formError == nil && writes(stub).count == 1)
+    }
+
+    @Test func emailAddressReadFailureExplainsItself() async throws {
+        let stub = StubServer { req in
+            if req.url!.path.hasSuffix("/email/routing/addresses") { return TestAPI.reply(req, TestAPI.forbiddenBody, status: 403) }
+            if req.url!.path.hasSuffix("/email/routing/rules") { return TestAPI.reply(req, TestAPI.ok("[]")) }
+            return TestAPI.base(req)
+        }
+        let s = EmailRoutingStore(zone: TestAPI.zone, session: try await TestAPI.readySession(stub))
+        await s.load()
+        #expect(s.addressesNote?.contains("Email Routing Addresses Read") == true)
+    }
+
     @Test func emailForbiddenLocksWrites() async throws {
         let (s, _) = try await email(denyWrites: true)
         await s.toggle(try #require(s.rules.value?.first))
@@ -105,6 +125,14 @@ import CloudflareKitTesting
         s.request(.create(FirewallRuleDraft(action: "log", expression: "true", description: "")))
         await s.confirmChange(try #require(s.confirm.pending))
         #expect(writes(stub).map(\.request.httpMethod) == ["POST"])
+    }
+
+    @Test func wafRulesWithExtraOptionsAreNeverToggledSoNothingIsStripped() async throws {
+        let (s, stub) = try await waf()
+        let skip = FirewallRule(id: "r9", action: "skip", expression: "true", enabled: true, actionParameters: .object(["ruleset": .string("current")]))
+        await s.disable(skip)
+        s.request(.enable(skip))
+        #expect(s.confirm.pending == nil && s.formError != nil && writes(stub).isEmpty)
     }
 
     @Test func wafInvalidDraftNeverReachesTheConfirmation() async throws {

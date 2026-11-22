@@ -9,6 +9,7 @@ struct FirewallView: View {
 
     init(zone: Zone, session: Session) { _store = State(initialValue: FirewallStore(zone: zone, session: session)) }
 
+    private func label(_ r: FirewallRule) -> String { r.description?.isEmpty == false ? r.description! : r.expression }
     private static let actions = [("managed_challenge", "Managed challenge"), ("js_challenge", "JS challenge"), ("challenge", "Interactive challenge"), ("block", "Block"), ("log", "Log")]
 
     var body: some View {
@@ -26,9 +27,10 @@ struct FirewallView: View {
                         Spacer()
                         Toggle("Enabled", isOn: Binding(get: { r.enabled ?? true }, set: { on in
                             if on { store.request(.enable(r)) } else { Task { await store.disable(r) } } })).labelsHidden()
-                            .accessibilityLabel("Enabled for \(r.description ?? r.expression)").disabled(!store.canWrite || store.busy)
+                            .accessibilityLabel("Enabled for \(label(r))").disabled(!store.canWrite || store.busy || !r.isPlain)
+                            .help(r.isPlain ? "" : "This rule has options Nephele can't show. Change it in the Cloudflare dashboard.")
                         Button("Delete", systemImage: "trash", role: .destructive) { store.request(.delete(r)) }.labelStyle(.iconOnly).buttonStyle(.borderless)
-                            .accessibilityLabel("Delete rule \(r.description ?? r.expression)").disabled(!store.canWrite)
+                            .accessibilityLabel("Delete rule \(label(r))").disabled(!store.canWrite || store.busy)
                     }
                 }
             }
@@ -36,7 +38,7 @@ struct FirewallView: View {
             VStack(alignment: .leading, spacing: 6) {
                 if !store.canWrite { Label("This token can't change WAF rules. Add Zone WAF Edit to it in Cloudflare.", systemImage: "lock").foregroundStyle(.secondary) }
                 else if let e = store.formError { Label(e, systemImage: "exclamationmark.triangle").foregroundStyle(.red).font(.callout) }
-                Text("Expressions use Cloudflare's rules language, for example (ip.src eq 203.0.113.7) or (http.request.uri.path contains \"/admin\"). Start with Log to see what a rule would match.").font(.footnote).foregroundStyle(.secondary)
+                Text("Expressions use Cloudflare's rules language, for example (ip.src eq 203.0.113.7) or (http.request.uri.path contains \"/admin\").").font(.footnote).foregroundStyle(.secondary)
                 HStack {
                     Picker("Action", selection: $action) { ForEach(Self.actions, id: \.0) { Text($0.1).tag($0.0) } }.frame(maxWidth: 220)
                     TextField("Name", text: $note).frame(maxWidth: 160)

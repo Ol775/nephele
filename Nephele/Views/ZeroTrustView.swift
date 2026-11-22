@@ -121,7 +121,7 @@ struct ZeroTrustView: View {
                         Text([g.action.map { $0.replacingOccurrences(of: "_", with: " ").capitalized }, g.filters?.joined(separator: ", "), g.enabled == false ? "Off" : nil].compactMap { $0 }.joined(separator: " \u{00B7} ")).font(.footnote).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button("Delete\u{2026}", role: .destructive) { zt.formError = nil; deleting = .gateway(g) }.disabled(!zt.canWrite(section))
+                    Button("Delete\u{2026}", role: .destructive) { zt.formError = nil; deleting = .gateway(g) }.disabled(!zt.canWrite(section)).accessibilityLabel("Delete \(g.name)")
                 }
             }
         }

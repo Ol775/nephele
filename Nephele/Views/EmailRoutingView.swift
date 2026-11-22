@@ -17,14 +17,14 @@ struct EmailRoutingView: View {
                 List(list) { r in
                     HStack {
                         VStack(alignment: .leading) {
-                            Text(r.from ?? r.name ?? "Catch-all")
+                            Text(r.from ?? (r.name?.isEmpty == false ? r.name! : "Catch-all"))
                             Text(r.isForward ? "Forwards to \(r.destinations.joined(separator: ", "))" : (r.actions?.first?.type.capitalized ?? "")).font(.footnote).foregroundStyle(.secondary)
                         }
                         Spacer()
                         Toggle("Enabled", isOn: Binding(get: { r.enabled ?? true }, set: { _ in Task { await store.toggle(r) } })).labelsHidden()
-                            .accessibilityLabel("Enabled for \(r.from ?? "this rule")").disabled(!store.canWrite || store.busy)
+                            .accessibilityLabel("Enabled for \(r.from ?? "this rule")").disabled(!store.canWrite || store.busy || r.from == nil)
                         Button("Delete", systemImage: "trash", role: .destructive) { store.requestDelete(r) }.labelStyle(.iconOnly).buttonStyle(.borderless)
-                            .accessibilityLabel("Delete rule for \(r.from ?? "this rule")").disabled(!store.canWrite)
+                            .accessibilityLabel("Delete rule for \(r.from ?? "this rule")").disabled(!store.canWrite || store.busy || r.from == nil)
                     }
                 }
             }
@@ -32,7 +32,8 @@ struct EmailRoutingView: View {
             VStack(alignment: .leading, spacing: 6) {
                 if !store.canWrite { Label("This token can't change Email Routing. Add Email Routing Rules Edit to it in Cloudflare.", systemImage: "lock").foregroundStyle(.secondary) }
                 else if let e = store.formError { Label(e, systemImage: "exclamationmark.triangle").foregroundStyle(.red).font(.callout) }
-                if store.verified.isEmpty {
+                if let note = store.addressesNote { Label(note, systemImage: "exclamationmark.triangle").foregroundStyle(.red).font(.footnote) }
+                else if store.verified.isEmpty {
                     Text("Add and verify a destination address in the Cloudflare dashboard first. Rules can only forward to verified addresses.").font(.footnote).foregroundStyle(.secondary)
                 }
                 HStack {

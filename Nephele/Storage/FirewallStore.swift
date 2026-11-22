@@ -15,7 +15,7 @@ enum FirewallChange: Equatable, Sendable {
         }
     }
     static func verb(_ action: String) -> String {
-        switch action { case "block": "blocked"; case "log": "logged"; default: "challenged (\(action.replacingOccurrences(of: "_", with: " ")))" }
+        switch action { case "block": "blocked"; case "log": "logged"; case "managed_challenge", "js_challenge", "challenge": "challenged (\(action.replacingOccurrences(of: "_", with: " ")))"; default: "handled by its \(action) action" }
     }
 }
 
@@ -50,12 +50,14 @@ final class FirewallStore {
     func request(_ change: FirewallChange) {
         formError = nil
         if case .create(let d) = change, !d.isValid { formError = "A rule needs an action and an expression."; return }
+        if case .enable(let r) = change, !r.isPlain { formError = "This rule has options Nephele can't show. Change it in the Cloudflare dashboard."; return }
         confirm.request(change)
     }
 
-    /// Turning a rule off needs no confirmation: it only removes protection.
+    /// Turning a plain rule off needs no confirmation. Rules with options (skip, custom responses) can't be toggled here at all.
     func disable(_ rule: FirewallRule) async {
         formError = nil
+        guard rule.isPlain else { formError = "This rule has options Nephele can't show. Change it in the Cloudflare dashboard."; return }
         await write { client, isCurrent in
             guard let id = rulesetID else { return }
             let set = try await client.setFirewallRule(zoneID: zone.id, rulesetID: id, rule: rule, enabled: false)

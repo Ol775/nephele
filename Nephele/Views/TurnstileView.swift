@@ -31,7 +31,7 @@ struct TurnstileView: View {
                             Text([w.sitekey, w.mode, w.domains?.joined(separator: ", ")].compactMap { $0 }.joined(separator: " \u{00B7} ")).font(.footnote).foregroundStyle(.secondary).textSelection(.enabled)
                         }
                         Spacer()
-                        Button("Delete\u{2026}", role: .destructive) { store.formError = nil; deleting = w }.disabled(!store.canWrite)
+                        Button("Delete\u{2026}", role: .destructive) { store.formError = nil; deleting = w }.disabled(!store.canWrite).accessibilityLabel("Delete \(w.name)")
                     }
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)

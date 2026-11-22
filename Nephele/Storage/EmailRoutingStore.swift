@@ -5,7 +5,7 @@ import CloudflareKit
 enum EmailChange: Equatable, Sendable {
     case delete(EmailRule)
     var message: String {
-        switch self { case .delete(let r): "Mail to \(r.from ?? "this address") stops being forwarded straight away. It can't be undone." }
+        switch self { case .delete(let r): "The rule for \(r.from ?? "this address") is removed straight away, so mail to it stops being handled. It can't be undone." }
     }
 }
 
@@ -16,6 +16,7 @@ final class EmailRoutingStore {
     private(set) var rules: LoadState<[EmailRule]> = .idle
     private(set) var addresses: [EmailAddress] = []
     private(set) var routing: EmailRoutingStatus?
+    private(set) var addressesNote: String?
     private(set) var canWrite = true
     private(set) var busy = false
     var formError: String?
@@ -30,15 +31,20 @@ final class EmailRoutingStore {
         guard let client = session.client, let account = session.selectedAccountID else { return }
         let epoch = session.identityEpoch
         let status = try? await client.emailRoutingStatus(zoneID: zone.id)
-        let list = (try? await client.emailAddresses(accountID: account)) ?? []
+        var list: [EmailAddress] = [], note: String?
+        do { list = try await client.emailAddresses(accountID: account) }
+        catch CloudflareError.permissionDenied { note = StorageCopy.editHint("Email Routing Addresses Read").replacingOccurrences(of: "can't change this", with: "can't read destination addresses") }
+        catch { note = "Couldn't read your destination addresses. Refresh to try again." }
         guard epoch == session.identityEpoch else { return }
-        routing = status; addresses = list
+        routing = status; addresses = list; addressesNote = note
     }
 
     func create(address: String, destination: String) async {
         formError = nil
+        let address = address.trimmingCharacters(in: .whitespaces).lowercased()
         guard validEmail(address) else { formError = "Enter the full address to forward, such as hello@\(zone.name)."; return }
-        guard address.lowercased().hasSuffix("@" + zone.name.lowercased()) else { formError = "The address must end in @\(zone.name)."; return }
+        let host = zone.name.lowercased()
+        guard address.hasSuffix("@" + host) || address.hasSuffix("." + host) else { formError = "The address must end in @\(zone.name)."; return }
         guard verified.contains(where: { $0.email == destination }) else { formError = "Pick a destination you've verified."; return }
         await write { client, isCurrent in
             let r = try await client.createEmailRule(zoneID: zone.id, address: address, destination: destination)
@@ -49,6 +55,7 @@ final class EmailRoutingStore {
 
     func toggle(_ rule: EmailRule) async {
         formError = nil
+        guard rule.from != nil else { formError = "Catch-all and other special rules are changed in the Cloudflare dashboard."; return }
         await write { client, isCurrent in
             let updated = try await client.setEmailRule(zoneID: zone.id, rule: rule, enabled: !(rule.enabled ?? true))
             guard isCurrent() else { return }
@@ -56,7 +63,11 @@ final class EmailRoutingStore {
         }
     }
 
-    func requestDelete(_ rule: EmailRule) { formError = nil; confirm.request(.delete(rule)) }
+    func requestDelete(_ rule: EmailRule) {
+        formError = nil
+        guard rule.from != nil else { formError = "Catch-all and other special rules are changed in the Cloudflare dashboard."; return }
+        confirm.request(.delete(rule))
+    }
 
     func confirmChange(_ change: EmailChange) async {
         guard confirm.take(change) else { return }

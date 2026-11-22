@@ -69,6 +69,21 @@ import CloudflareKitTesting
         #expect(bodyOf(r).contains("\"enabled\":false") && bodyOf(r).contains("\"action\":\"block\""))
     }
 
+    @Test func toggleRefusesARuleWithOptionsTheModelWouldDrop() async throws {
+        let s = stub(ok("{\"id\":\"rs\"}"))
+        let json = "{\"id\":\"r1\",\"action\":\"block\",\"expression\":\"true\",\"action_parameters\":{\"response\":{\"status_code\":403}}}"
+        let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase
+        let rule = try d.decode(FirewallRule.self, from: Data(json.utf8))
+        #expect(!rule.isPlain)
+        await #expect(throws: CloudflareError.self) { _ = try await client(s).setFirewallRule(zoneID: "z1", rulesetID: "rs", rule: rule, enabled: false) }
+        #expect(s.recorded.isEmpty)
+    }
+
+    @Test func rulesetLookupOnlyTreatsCode10003AsMissing() async throws {
+        let other = stub("{\"success\":false,\"errors\":[{\"code\":7003,\"message\":\"could not find zone\"}],\"result\":null}", status: 404)
+        await #expect(throws: CloudflareError.self) { _ = try await client(other).firewallRuleset(zoneID: "z1") }
+    }
+
     @Test func turnstileCreateReturnsTheSecretOnceAndKeepsItOutOfTheWidget() async throws {
         let s = stub(ok("{\"sitekey\":\"0xAA\",\"secret\":\"SEKRET\",\"name\":\"site\",\"mode\":\"managed\",\"domains\":[\"e.dev\"]}"))
         let made = try await client(s).createTurnstile(accountID: "a1", name: "site", domains: ["e.dev"], mode: "managed")
