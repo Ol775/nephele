@@ -15,6 +15,8 @@ swift test --package-path Packages/CloudflareKit   # the API client
 xcodebuild test -scheme Nephele -destination 'platform=macOS'   # the app
 ```
 
+The updater has an opt-in live test that downloads the published release and verifies it: `TEST_RUNNER_NEPHELE_LIVE_UPDATE_TEST=1 xcodebuild test -scheme Nephele -destination 'platform=macOS' -only-testing:NepheleTests/LiveUpdaterTests`.
+
 Run the app with sample data and no account: build it, then `Nephele.app/Contents/MacOS/Nephele --demo`.
 
 ## Pull requests

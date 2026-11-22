@@ -49,3 +49,24 @@ import CryptoKit
         _ = try Curve25519.Signing.PublicKey(rawRepresentation: raw)
     }
 }
+
+/// Talks to the real GitHub release. Off by default: run with NEPHELE_LIVE_UPDATE_TEST=1 to check the whole
+/// check, download and verify chain (signature, checksum, bundle id, code signature) against the published release.
+@Suite(.enabled(if: ProcessInfo.processInfo.environment["NEPHELE_LIVE_UPDATE_TEST"] == "1")) struct LiveUpdaterTests {
+    @Test func publishedReleaseDownloadsAndVerifies() async throws {
+        let status = await Task.detached { Updater.check(installed: "0.0.1") }.value
+        guard case .available(let info) = status else { Issue.record("expected an update, got \(status)"); return }
+        #expect(info.dmgURL != nil && info.sigURL != nil && info.sha256 != nil)
+        let prepared = await Task.detached { Updater.prepare(info) { _, _ in } }.value
+        #expect(prepared.error == nil, "\(prepared.error ?? "")")
+        let app = try #require(prepared.app)
+        #expect(prepared.hash == Updater.executableHash(app))
+        #expect(NSDictionary(contentsOf: app.appendingPathComponent("Contents/Info.plist"))?["CFBundleShortVersionString"] as? String == info.version)
+        try? FileManager.default.removeItem(at: app.deletingLastPathComponent())
+    }
+
+    @Test func currentVersionIsUpToDate() async {
+        let latest = await Task.detached { Updater.check(installed: "99.0.0") }.value
+        #expect(latest == .upToDate)
+    }
+}
