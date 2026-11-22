@@ -26,6 +26,10 @@ Use the dashboard's names below (Profile → API Tokens → Create Custom Token)
 
 Nephele never asks for more than it needs to show a screen, and it never uses a permission for anything other than the action you triggered.
 
+## Create a token from the sign-in screen
+
+Pick **Read only** or **Read and edit** on the sign-in screen, then **Create a … token**. Cloudflare opens with those permissions already ticked. Cloudflare's link format has no key for Notifications, Email Routing, WAF, Turnstile, Tunnels or Gateway, so add those by hand on that page if you want them.
+
 ## Tips
 
 - Start read-only. Add an Edit permission when you first need it.
