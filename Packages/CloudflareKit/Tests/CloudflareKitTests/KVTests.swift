@@ -68,4 +68,26 @@ import CloudflareKitTesting
         try await client(stub).deleteKVKey(accountID: "acc1", namespace: "ns1", key: "..")
         #expect(stub.recorded.first?.request.url?.absoluteString.hasSuffix("/values/%2E%2E") == true)
     }
+
+    @Test func putKeepsTheExpirationWhenGiven() async throws {
+        let stub = StubServer { req in (StubURLProtocol.response(req.url!), Data("{\"success\":true,\"errors\":[],\"result\":null}".utf8)) }
+        try await client(stub).putKVValue(accountID: "a", namespace: "n", key: "k", value: Data("v".utf8), expiration: 1_900_000_000)
+        #expect(stub.recorded.first?.request.url?.query?.contains("expiration=1900000000") == true)
+        try await client(stub).putKVValue(accountID: "a", namespace: "n", key: "k", value: Data("v".utf8))
+        #expect(stub.recorded.last?.request.url?.query == nil)
+    }
+
+    @Test func keysCarryMetadata() async throws {
+        let stub = StubServer { req in (StubURLProtocol.response(req.url!), Data("{\"success\":true,\"errors\":[],\"result\":[{\"name\":\"a\",\"metadata\":{\"x\":1}},{\"name\":\"b\"}],\"result_info\":{\"count\":2,\"cursor\":\"\"}}".utf8)) }
+        let page = try await client(stub).kvKeys(accountID: "a", namespace: "n")
+        #expect(page.keys[0].metadata != nil && page.keys[1].metadata == nil)
+    }
+
+    @Test func anUnencodedPathThrowsInsteadOfCrashing() async {
+        let stub = StubServer()
+        let c = client(stub)
+        await #expect(throws: CloudflareError.transport("Invalid request path")) { _ = try await c.kvValue(accountID: "a b", namespace: "n", key: "k") }
+        await #expect(throws: CloudflareError.transport("Invalid request path")) { _ = try await c.kvValue(accountID: "é", namespace: "n", key: "k") }
+        #expect(stub.recorded.isEmpty)
+    }
 }

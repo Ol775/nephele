@@ -20,7 +20,7 @@ final class R2Store {
     var formError: String?
     let confirm = ConfirmGate<R2Change>()
 
-    @ObservationIgnored private let session: Session
+    @ObservationIgnored let session: Session
 
     init(session: Session) { self.session = session }
 
@@ -74,9 +74,10 @@ final class R2Store {
     func create(_ name: String) async {
         formError = nil
         let name = name.trimmingCharacters(in: .whitespaces)
-        guard validBucketName(name) else { formError = WorkerValidationError.invalidName.errorDescription.map { _ in "Use 3 to 63 lowercase letters, digits or hyphens, and don't start or end with a hyphen." }; return }
-        await write { client, account in
+        guard validBucketName(name) else { formError = "Use 3 to 63 lowercase letters, digits or hyphens, and don't start or end with a hyphen."; return }
+        await write { client, account, isCurrent in
             let b = try await client.createR2Bucket(accountID: account, name: name)
+            guard isCurrent() else { return }
             self.buckets = .loaded(((self.buckets.value ?? []) + [b]).sorted { $0.name < $1.name })
         }
     }
@@ -84,8 +85,9 @@ final class R2Store {
     func delete(_ bucket: R2Bucket, typedName: String) async {
         formError = nil
         guard typedName == bucket.name else { formError = "Type \(bucket.name) exactly to delete it."; return }
-        await write { client, account in
+        await write { client, account, isCurrent in
             try await client.deleteR2Bucket(accountID: account, bucket: bucket.name)
+            guard isCurrent() else { return }
             self.buckets = .loaded((self.buckets.value ?? []).filter { $0.name != bucket.name })
             if self.selected == bucket { self.selected = nil; self.objects = [] }
         }
@@ -97,19 +99,24 @@ final class R2Store {
         guard confirm.take(change), let bucket = selected else { return }
         switch change {
         case .deleteObject(let key):
-            await write { client, account in
+            await write { client, account, isCurrent in
                 try await client.deleteR2Object(accountID: account, bucket: bucket.name, key: key)
+                guard isCurrent() else { return }
                 self.objects.removeAll { $0.key == key }
             }
         }
     }
 
-    private func write(_ body: (CFClient, String) async throws -> Void) async {
+    /// Runs one write. `isCurrent` turns false if the account changed meanwhile, so late results aren't applied.
+    private func write(_ body: (CFClient, String, @MainActor @Sendable () -> Bool) async throws -> Void) async {
         guard let client = session.client, let account else { return }
-        do { try await body(client, account) }
+        let epoch = session.identityEpoch
+        do { try await body(client, account, { [session] in epoch == session.identityEpoch }) }
         catch let error as CloudflareError {
+            guard epoch == session.identityEpoch else { return }
+            session.handle(error)
             if case .permissionDenied = error { canWrite = false; formError = StorageCopy.editHint("Workers R2 Storage Edit") }
-            else { session.handle(error); formError = error.errorDescription }
+            else { formError = error.errorDescription }
         } catch { formError = "Couldn't save that change." }
     }
 }

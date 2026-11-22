@@ -66,4 +66,12 @@ import CloudflareKitTesting
         #expect(D1SQL.quoteIdentifier("we\"ird; DROP TABLE t") == "\"we\"\"ird; DROP TABLE t\"")
         #expect(D1SQL.isReadOnly("SELECT * FROM \(D1SQL.quoteIdentifier("we\"ird; DROP TABLE t")) LIMIT 100;"))
     }
+
+    @Test func lineEndingsAndCombiningMarksCannotHideAWrite() {
+        for bad in ["SELECT 1 -- note\r\nDELETE FROM t", "SELECT 1 -- note\rDELETE FROM t", "SELECT 'a'\u{301}; DELETE FROM t; SELECT 'b'\u{301}",
+                    "SELECT 1 /* x */\u{301}; DELETE FROM t; /* */"] {
+            #expect(!D1SQL.isReadOnly(bad), "\(bad.debugDescription)")
+        }
+        #expect(D1SQL.isReadOnly("SELECT 1 -- note\r\n"))
+    }
 }

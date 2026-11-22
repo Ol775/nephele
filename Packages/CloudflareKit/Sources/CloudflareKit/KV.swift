@@ -9,8 +9,10 @@ public struct KVNamespace: Codable, Sendable, Identifiable, Equatable, Hashable 
 public struct KVKey: Decodable, Sendable, Identifiable, Equatable, Hashable {
     public let name: String
     public let expiration: Double?
+    /// Arbitrary JSON attached to the key. A plain value save would erase it.
+    public let metadata: JSONValue?
     public var id: String { name }
-    public init(name: String, expiration: Double? = nil) { self.name = name; self.expiration = expiration }
+    public init(name: String, expiration: Double? = nil, metadata: JSONValue? = nil) { self.name = name; self.expiration = expiration; self.metadata = metadata }
 }
 
 public struct KVKeyPage: Sendable, Equatable {
@@ -45,8 +47,10 @@ extension CFClient {
         try await download("\(kvBase(accountID))/\(namespace)/values/\(pathSegment(key))").data
     }
 
-    public func putKVValue(accountID: String, namespace: String, key: String, value: Data) async throws {
-        _ = try await raw("PUT", "\(kvBase(accountID))/\(namespace)/values/\(pathSegment(key))", body: value, contentType: "application/octet-stream")
+    /// Writes a value. Pass the key's existing `expiration` (epoch seconds) so an edit doesn't make it permanent.
+    public func putKVValue(accountID: String, namespace: String, key: String, value: Data, expiration: Double? = nil) async throws {
+        let query = expiration.map { [URLQueryItem(name: "expiration", value: String(Int($0)))] } ?? []
+        _ = try await raw("PUT", "\(kvBase(accountID))/\(namespace)/values/\(pathSegment(key))", query: query, body: value, contentType: "application/octet-stream")
     }
 
     public func deleteKVKey(accountID: String, namespace: String, key: String) async throws {

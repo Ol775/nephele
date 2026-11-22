@@ -45,9 +45,12 @@ public enum D1SQL {
     /// Splits on `;` outside quotes and drops comments. Quoted text becomes `''` so only code remains.
     /// Returns nil when a quote, bracket or block comment is never closed.
     static func split(_ sql: String) -> [String]? {
-        var statements: [String] = [], current = ""
-        let chars = Array(sql)
+        // Scalars, not Characters: SQLite reads code points, and "\r\n" or a quote plus a combining mark
+        // would otherwise be one Character that matches neither "\n" nor the quote.
+        var statements: [String] = [], current = String.UnicodeScalarView()
+        let chars = Array(sql.unicodeScalars)
         var i = 0
+        func at(_ k: Int) -> Unicode.Scalar? { k < chars.count ? chars[k] : nil }
         while i < chars.count {
             let c = chars[i]
             switch c {
@@ -55,30 +58,30 @@ public enum D1SQL {
                 var j = i + 1, closed = false
                 while j < chars.count {
                     if chars[j] == c {
-                        if j + 1 < chars.count, chars[j + 1] == c { j += 2; continue }
+                        if at(j + 1) == c { j += 2; continue }
                         closed = true; break
                     }
                     j += 1
                 }
                 guard closed else { return nil }
-                current += "''"; i = j + 1
+                current.append(contentsOf: "''".unicodeScalars); i = j + 1
             case "[":
                 guard let close = chars[(i + 1)...].firstIndex(of: "]") else { return nil }
-                current += "''"; i = close + 1
-            case "-" where i + 1 < chars.count && chars[i + 1] == "-":
-                while i < chars.count, chars[i] != "\n" { i += 1 }
-            case "/" where i + 1 < chars.count && chars[i + 1] == "*":
+                current.append(contentsOf: "''".unicodeScalars); i = close + 1
+            case "-" where at(i + 1) == "-":
+                while i < chars.count, chars[i] != "\n", chars[i] != "\r" { i += 1 }
+            case "/" where at(i + 1) == "*":
                 var j = i + 2, closed = false
                 while j + 1 < chars.count { if chars[j] == "*" && chars[j + 1] == "/" { closed = true; break }; j += 1 }
                 guard closed else { return nil }
-                current += " "; i = j + 2
+                current.append(" "); i = j + 2
             case ";":
-                statements.append(current); current = ""; i += 1
+                statements.append(String(current)); current = String.UnicodeScalarView(); i += 1
             default:
                 current.append(c); i += 1
             }
         }
-        statements.append(current)
+        statements.append(String(current))
         return statements.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
     }
 }

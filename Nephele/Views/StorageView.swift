@@ -28,6 +28,7 @@ struct StorageView: View {
 
 struct KVView: View {
     @Environment(StorageStore.self) private var storage
+    @Environment(Session.self) private var session
     @Environment(\.nepheleTheme) private var theme
     @State private var creating = false
     @State private var newTitle = ""
@@ -44,6 +45,7 @@ struct KVView: View {
             valuePane.frame(minWidth: 280)
         }
         .task { await kv.load() }
+        .onChange(of: session.identityEpoch) { deleting = nil }
         .sheet(item: $deleting) { ns in
             TypedConfirmSheet(title: "Delete \(ns.title)?", message: "This deletes the namespace and every key in it. It can't be undone. Type its name to confirm.",
                               name: ns.title, buttonLabel: "Delete namespace", error: kv.formError,
@@ -119,11 +121,12 @@ struct KVView: View {
                 HStack {
                     Text(v.key).monospaced().lineLimit(1)
                     Spacer()
-                    Button("Save") { Task { await kv.saveValue() } }.disabled(!kv.hasUnsavedChanges || !kv.canWrite || !v.isText)
+                    Button("Save") { Task { await kv.saveValue() } }.disabled(!kv.hasUnsavedChanges || !kv.canWrite || kv.editBlockedReason != nil)
                 }.padding(8)
+                if let reason = kv.editBlockedReason { Label(reason, systemImage: "lock").font(.footnote).foregroundStyle(.secondary).padding(.horizontal, 8) }
                 Divider()
                 if v.isText {
-                    TextEditor(text: $kv.draft).font(.system(size: theme.fontSize, design: .monospaced)).padding(4)
+                    TextEditor(text: $kv.draft).disabled(kv.editBlockedReason != nil).font(.system(size: theme.fontSize, design: .monospaced)).padding(4)
                 } else {
                     ContentUnavailableView("Binary value", systemImage: "doc", description: Text("\(v.byteCount) bytes. Nephele only edits text values."))
                 }
@@ -136,6 +139,7 @@ struct KVView: View {
 
 struct D1View: View {
     @Environment(StorageStore.self) private var storage
+    @Environment(Session.self) private var session
     @Environment(\.nepheleTheme) private var theme
     @State private var creating = false
     @State private var newName = ""
@@ -169,6 +173,7 @@ struct D1View: View {
             console
         }
         .task { await d1.load() }
+        .onChange(of: session.identityEpoch) { deleting = nil }
         .sheet(item: $deleting) { db in
             TypedConfirmSheet(title: "Delete \(db.name)?", message: "This deletes the database and all its data. It can't be undone. Type its name to confirm.",
                               name: db.name, buttonLabel: "Delete database", error: d1.formError,
@@ -238,6 +243,7 @@ struct ResultGrid: View {
 
 struct R2View: View {
     @Environment(StorageStore.self) private var storage
+    @Environment(Session.self) private var session
     @State private var creating = false
     @State private var newName = ""
     @State private var deleting: R2Bucket?
@@ -265,6 +271,7 @@ struct R2View: View {
             objects
         }
         .task { await r2.load() }
+        .onChange(of: session.identityEpoch) { deleting = nil }
         .sheet(item: $deleting) { b in
             TypedConfirmSheet(title: "Delete \(b.name)?", message: "A bucket has to be empty before it can be deleted. This can't be undone. Type its name to confirm.",
                               name: b.name, buttonLabel: "Delete bucket", error: r2.formError,

@@ -108,6 +108,8 @@ public actor CFClient {
     private func perform(_ method: String, _ path: String, query: [URLQueryItem], body: Data?, contentType: String = "application/json") async throws -> (Data, Int, [String: String]) {
         var comps = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
         // Callers pass paths already percent-encoded (see `pathSegment`), so slashes inside names survive.
+        let allowed = CharacterSet.urlPathAllowed.union(CharacterSet(charactersIn: "%"))
+        guard path.unicodeScalars.allSatisfy(allowed.contains) else { throw CloudflareError.transport("Invalid request path") }
         comps.percentEncodedPath += path
         if !query.isEmpty { comps.queryItems = query }
         var request = URLRequest(url: comps.url!)

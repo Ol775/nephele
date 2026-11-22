@@ -20,6 +20,7 @@ import CloudflareKitTesting
                 if q.contains("cursor=C1") { return TestAPI.reply(req, "{\"success\":true,\"errors\":[],\"result\":[{\"name\":\"b\"},{\"name\":\"c\"}],\"result_info\":{\"count\":2,\"cursor\":\"\"}}") }
                 return TestAPI.reply(req, "{\"success\":true,\"errors\":[],\"result\":[{\"name\":\"a\"},{\"name\":\"b\"}],\"result_info\":{\"count\":2,\"cursor\":\"C1\"}}")
             }
+            if p.hasSuffix("/values/k") { return TestAPI.reply(req, TestAPI.forbiddenBody, status: 404) }
             if p.contains("/values/") { return (StubURLProtocol.response(req.url!), binary ? Data([0xFF, 0x00, 0xFE]) : Data("hello".utf8)) }
             if p.hasSuffix("/kv/namespaces") { return TestAPI.reply(req, TestAPI.ok(Self.namespaces)) }
             return TestAPI.base(req)
