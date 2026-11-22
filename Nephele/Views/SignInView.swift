@@ -17,7 +17,7 @@ struct SignInView: View {
             VStack(spacing: 6) {
                 Picker("Access for a new token", selection: $access) {
                     ForEach(TokenAccess.allCases) { Text($0.title).tag($0) }
-                }.pickerStyle(.segmented).labelsHidden().frame(maxWidth: 260)
+                }.pickerStyle(.segmented).labelsHidden().frame(maxWidth: 360)
                 Text(access.summary).font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 380)
             }
             SecureField("API token", text: $token).textFieldStyle(.roundedBorder).frame(maxWidth: 380).onSubmit(submit)
@@ -29,7 +29,7 @@ struct SignInView: View {
                 Button("Verify and save", action: submit).buttonStyle(.borderedProminent)
                 Link("Create a \(access.title.lowercased()) token", destination: access.createURL)
             }
-            Text(TokenAccess.addByHand).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 420)
+            Text(access.byHand).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 420)
             if session.state == .verifying { ProgressView().controlSize(.small) }
         }
         .padding(40)
