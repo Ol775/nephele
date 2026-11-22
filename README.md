@@ -1,6 +1,6 @@
 # Nephele
 
-A native macOS 26 app for managing a Cloudflare account: domains and DNS, alerts, usage, Workers, storage, and (coming next) Zero Trust. Pure Swift and SwiftUI. An independent project, not affiliated with Cloudflare.
+A native macOS 26 app for managing a Cloudflare account: domains and DNS, alerts, usage, Workers, storage, Pages, Zero Trust, Turnstile, and per-domain settings, WAF rules and email forwarding. Pure Swift and SwiftUI. An independent project, not affiliated with Cloudflare.
 
 Phase 1 covers sign-in with an API token, an overview, domains with full DNS management, alerts with notifications and a menu bar item, usage against Free plan allowances, Settings and a full Appearance screen.
 
@@ -10,7 +10,9 @@ Phase 2b adds Storage: Workers KV (namespaces, keys, text values), D1 (databases
 
 Phase 3 adds Zero Trust: Tunnels (list, create, delete; the connector token is never shown), Access applications (list, delete) and service tokens (list, create, delete; the secret is shown once at creation and never stored).
 
-Phase 4 adds per-domain settings (Domains, then a domain, then Settings): SSL/TLS mode, Always use HTTPS, HTTPS rewrites, minimum TLS, TLS 1.3, security level, development mode, and cache purge (by URL, or everything after typing the domain name). WAF rules, Email Routing, Turnstile and Gateway are not built yet.
+Phase 4 adds per-domain settings (Domains, then a domain, then Settings): SSL/TLS mode, Always use HTTPS, HTTPS rewrites, minimum TLS, TLS 1.3, security level, development mode, and cache purge (by URL, or everything after typing the domain name).
+
+Phase 4b adds, from a domain's toolbar, **Firewall** (WAF custom rules: list, add, turn on or off, delete; adding, turning on or deleting asks first, because a wrong expression can lock real visitors out) and **Email** (Email Routing forwarding rules to verified destination addresses: add, turn on or off, delete). It also adds a **Turnstile** section (widgets: list, create, delete; the secret key is shown once at creation and never stored) and a **Gateway** tab under Zero Trust (rules: list and delete only; editing stays in the dashboard because it replaces the whole rule).
 
 Phase 2c adds Pages: projects, their deployments, and retry, roll back or delete (each confirmed). Creating projects and direct uploads stay in the dashboard.
 
@@ -27,7 +29,7 @@ In the Cloudflare dashboard go to Profile, API Tokens, Create Token. Start with 
 - Zone: Zone Read, DNS Read
 - Account: Notifications Read, Account Analytics Read, Account Settings Read
 
-For Workers add Workers Scripts Read (and Workers Tail Read for live logs, Workers Routes Read per zone). For storage add Workers KV Storage, D1 and Workers R2 Storage Read. For Zero Trust add Cloudflare Tunnel, Access: Apps and Policies and Access: Service Tokens Read. For Pages add Cloudflare Pages Read. For domain settings add Zone Settings Read (and Cache Purge to purge). Add DNS Edit, Workers Scripts Edit or the storage Edit permissions later if you want to make changes. Missing permissions never break the app: the screens that need them show a prompt instead.
+For Workers add Workers Scripts Read (and Workers Tail Read for live logs, Workers Routes Read per zone). For storage add Workers KV Storage, D1 and Workers R2 Storage Read. For Zero Trust add Cloudflare Tunnel, Access: Apps and Policies and Access: Service Tokens Read. For Pages add Cloudflare Pages Read. For domain settings add Zone Settings Read (and Cache Purge to purge). For Email Routing add Email Routing Rules Read and Email Routing Addresses Read; for WAF rules Zone WAF Read; for Turnstile Turnstile Sites Read; for Gateway Zero Trust Read, each with its Edit counterpart to change anything. Add DNS Edit, Workers Scripts Edit or the storage Edit permissions later if you want to make changes. Missing permissions never break the app: the screens that need them show a prompt instead.
 
 ## Build
 
@@ -54,6 +56,7 @@ To regenerate the app icon from `assets/logo.svg`:
 
 ## Known issues
 
+- Nothing that writes to Cloudflare (Workers, storage, Zero Trust, Pages, zone settings, Email Routing, WAF, Turnstile, Gateway) has been exercised against a live account yet. Request and response shapes come from Cloudflare's OpenAPI spec and are covered by stubbed tests only. Try writes on a throwaway domain first.
 - The icon is a concept master. A hand-tuned 16 px variant is still to do; check it in the Dock and menu bar before release.
 - The D1 usage meters use `rowsRead` and `rowsWritten` from Cloudflare's GraphQL API, which have not been confirmed against a live account. If they fail, the other meters still show.
 - The name and logo have not been legally cleared. Search the UK IPO and USPTO registers before any public release.
