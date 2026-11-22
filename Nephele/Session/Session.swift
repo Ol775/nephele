@@ -77,6 +77,9 @@ final class Session {
         }
     }
 
+    /// Demo mode only: establishes the session without saving the token.
+    func signInForDemo(token: String) async { try? await establish(token: token, persist: false) }
+
     func selectAccount(_ id: String?) {
         guard id != selectedAccountID else { return }
         selectedAccountID = id

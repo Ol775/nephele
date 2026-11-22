@@ -3,6 +3,7 @@ import SwiftUI
 struct AppShell: View {
     @Environment(SettingsStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(UpdateModel.self) private var updates
 
     var body: some View {
         @Bindable var navigator = navigator
@@ -14,6 +15,15 @@ struct AppShell: View {
                     .tag(route)
             }
             .listStyle(.sidebar)
+            .safeAreaInset(edge: .bottom) {
+                if let info = updates.available {
+                    Button { navigator.openSettings() } label: {
+                        Label(settings.sidebarIcons ? "" : "Update \(info.version)", systemImage: "arrow.down.circle.fill")
+                    }
+                    .buttonStyle(.borderedProminent).controlSize(.small).padding(8)
+                    .help("Version \(info.version) is available").accessibilityLabel("Update to version \(info.version) available")
+                }
+            }
             .background(theme.tintSidebar ? theme.accent.opacity(0.06) : .clear)
             .navigationSplitViewColumnWidth(min: settings.sidebarIcons ? 64 : 180, ideal: settings.sidebarIcons ? 64 : 210, max: settings.sidebarIcons ? 64 : 260)
         } detail: {

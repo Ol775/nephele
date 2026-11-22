@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: CloudflareKit tests
+        run: swift test --package-path Packages/CloudflareKit
+      - name: App tests
+        run: |
+          xcodegen generate
+          xcodebuild test -project Nephele.xcodeproj -scheme Nephele -destination 'platform=macOS'

@@ -24,7 +24,6 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.ol775.nephele
-        CODE_SIGN_ENTITLEMENTS: Nephele/Nephele.entitlements
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Nephele
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools

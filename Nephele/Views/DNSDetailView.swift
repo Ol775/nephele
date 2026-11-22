@@ -9,6 +9,7 @@ struct DNSDetailView: View {
     @State private var priority = 10
     @State private var proxied = false
     @State private var editing: DNSRecord?
+    @Environment(Navigator.self) private var navigator
     @State private var showSettings = false
     @State private var showEmail = false
     @State private var showFirewall = false
@@ -58,6 +59,10 @@ struct DNSDetailView: View {
         .navigationDestination(isPresented: $showEmail) { EmailRoutingView(zone: store.zone, session: session) }
         .navigationDestination(isPresented: $showFirewall) { FirewallView(zone: store.zone, session: session) }
         .task { await store.load() }
+        .onAppear {
+            switch navigator.zoneScreen { case "email": showEmail = true; case "firewall": showFirewall = true; case "zone-settings": showSettings = true; default: break }
+            navigator.zoneScreen = nil
+        }
         .confirmationDialog(dialogTitle, isPresented: Binding(get: { store.pending != nil }, set: { if !$0 { store.dialogDismissed() } }), presenting: store.pending) { action in
             Button(action.kind == .delete ? "Delete \(action.record.type) record" : (action.record.proxied == true ? "Switch to DNS only" : "Proxy through Cloudflare"), role: action.kind == .delete ? .destructive : nil) {
                 Task { await store.confirm(action) }

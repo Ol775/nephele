@@ -63,7 +63,7 @@ import CloudflareKitTesting
 
     func render<V: View>(_ name: String, _ view: V, _ w: World, size: CGSize = CGSize(width: 1100, height: 720)) throws -> Int {
         let root = view
-            .environment(w.settings).environment(w.session).environment(w.nav).environment(w.domains).environment(w.alerts).environment(w.usage).environment(w.workers).environment(w.storage).environment(w.zeroTrust).environment(w.pages).environment(w.turnstile)
+            .environment(w.settings).environment(w.session).environment(w.nav).environment(w.domains).environment(w.alerts).environment(w.usage).environment(w.workers).environment(w.storage).environment(w.zeroTrust).environment(w.pages).environment(w.turnstile).environment(UpdateModel())
             .environment(\.nepheleTheme, NepheleTheme(w.settings.settings))
             .frame(width: size.width, height: size.height)
         let host = NSHostingView(rootView: root)

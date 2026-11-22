@@ -4,6 +4,7 @@ import ServiceManagement
 struct SettingsView: View {
     @Environment(Session.self) private var session
     @Environment(SettingsStore.self) private var store
+    @Environment(UpdateModel.self) private var updates
     @State private var newToken = ""
     @State private var tokenMessage: String?
     @State private var confirmRemove = false
@@ -76,8 +77,14 @@ struct SettingsView: View {
                 LabeledContent("Search domains") { Text("\u{2318}K").monospaced() }
                 LabeledContent("Open Settings") { Text("\u{2318},").monospaced() }
             }
+            Section("Updates") {
+                Toggle("Check for updates automatically", isOn: store.binding(\.autoUpdate))
+                updateRow
+                Text("Updates come only from this app's GitHub releases and install only if their signature checks out. After an update macOS may ask once to allow Keychain access: choose Always Allow.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
             Section("About") {
-                LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0")
+                LabeledContent("Version", value: AppInfo.version)
                 LabeledContent("Licence", value: "MIT")
                 Text("An independent app, not affiliated with Cloudflare. Cloudflare is a trademark of Cloudflare, Inc.").font(.footnote).foregroundStyle(.secondary)
             }
@@ -86,6 +93,29 @@ struct SettingsView: View {
         .confirmationDialog("Remove the API token?", isPresented: $confirmRemove) {
             Button("Remove token", role: .destructive) { session.signOut() }
         } message: { Text("Nephele stops syncing until you add another token. The token itself stays valid in Cloudflare.") }
+    }
+
+    @ViewBuilder private var updateRow: some View {
+        switch updates.status {
+        case .idle: Button("Check for updates") { updates.check() }
+        case .checking: HStack { ProgressView().controlSize(.small); Text("Checking\u{2026}").foregroundStyle(.secondary) }
+        case .upToDate:
+            HStack { Label("Up to date", systemImage: "checkmark.circle").foregroundStyle(.secondary); Spacer(); Button("Check again") { updates.check() } }
+        case .available(let info):
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Version \(info.version) is available").font(.headline)
+                ForEach(Array(info.notes.prefix(6).enumerated()), id: \.offset) { Text($0.element).font(.footnote).foregroundStyle(.secondary) }
+                HStack {
+                    Button("Update now") { updates.install(info) }.buttonStyle(.borderedProminent).disabled(info.dmgURL == nil || info.sigURL == nil)
+                    if info.sigURL == nil { Text("This release isn't signed, so it can't be installed automatically.").font(.footnote).foregroundStyle(.secondary) }
+                    Link("Release notes", destination: URL(string: "https://github.com/\(Updater.repo)/releases/tag/v\(info.version)")!)
+                }
+            }
+        case .installing(let message, let fraction):
+            VStack(alignment: .leading, spacing: 4) { Text(message); ProgressView(value: fraction) }
+        case .failed(let message):
+            HStack { Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.red); Spacer(); Button("Try again") { updates.check() } }
+        }
     }
 
     private func replaceToken() {

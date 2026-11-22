@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Ol775/nephele/security/advisories/new
+    about: Please report security problems privately, not in a public issue.
+  - name: Help and troubleshooting
+    url: https://github.com/Ol775/nephele/blob/main/docs/help.md
+    about: Common problems and fixes.

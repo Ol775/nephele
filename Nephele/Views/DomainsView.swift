@@ -15,9 +15,10 @@ struct DomainsView: View {
     @State private var query = ""
     @State private var onlyAttention = false
     @State private var searching = false
+    @State private var path: [Zone] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             LoadStateView(state: domains.zones, permission: "Zone Read", isEmpty: { $0.isEmpty },
                           emptyTitle: "No domains yet", emptyMessage: "Add a domain to Cloudflare and it shows up here.", emptySymbol: "globe",
                           retry: { Task { await domains.load(force: true) } }) { zones in
@@ -41,6 +42,7 @@ struct DomainsView: View {
         }
         .task { await domains.load() }
         .onChange(of: navigator.searchRequest) { searching = true }
+        .onChange(of: navigator.openZone) { _, zone in path = zone.map { [$0] } ?? [] }
     }
 }
 

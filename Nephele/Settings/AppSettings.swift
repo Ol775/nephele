@@ -53,6 +53,7 @@ struct AppSettings: Codable, Equatable, Sendable {
     var notifications = NotificationPrefs()
     var openAtLogin = false
     var showMenuBar = true
+    var autoUpdate = true
 
     init() {}
 
@@ -66,13 +67,13 @@ struct AppSettings: Codable, Equatable, Sendable {
         landing = c.value(.landing, .overview)
         if let lossy = try? c.decodeIfPresent([Lossy<NavEntry>].self, forKey: .nav) { nav = lossy.compactMap(\.value) }
         overview = c.value(.overview, OverviewSections()); notifications = c.value(.notifications, NotificationPrefs())
-        openAtLogin = c.value(.openAtLogin, false); showMenuBar = c.value(.showMenuBar, true)
+        openAtLogin = c.value(.openAtLogin, false); showMenuBar = c.value(.showMenuBar, true); autoUpdate = c.value(.autoUpdate, true)
         self = normalized()
     }
 
     private enum Keys: String, CodingKey {
         case theme, accentHex, density, radius, fontSize, fontDesign, iconWeight, tintSidebar, sidebarIcons
-        case highContrast, reduceMotion, landing, nav, overview, notifications, openAtLogin, showMenuBar
+        case highContrast, reduceMotion, landing, nav, overview, notifications, openAtLogin, showMenuBar, autoUpdate
     }
 
     /// Clamps ranges, repairs the nav list and keeps Appearance and Settings reachable.

@@ -1,66 +1,111 @@
-# Nephele
+<p align="center"><img src="docs/images/banner.png" alt="Nephele: a native Mac app for your Cloudflare account" width="100%"></p>
 
-A native macOS 26 app for managing a Cloudflare account: domains and DNS, alerts, usage, Workers, storage, Pages, Zero Trust, Turnstile, and per-domain settings, WAF rules and email forwarding. Pure Swift and SwiftUI. An independent project, not affiliated with Cloudflare.
+<p align="center">
+  <a href="https://github.com/Ol775/nephele/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Ol775/nephele?color=F6821F&label=release"></a>
+  <img alt="macOS 26+" src="https://img.shields.io/badge/macOS-26%2B-black?logo=apple">
+  <img alt="Swift 6" src="https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white">
+  <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-blue"></a>
+  <img alt="Beta" src="https://img.shields.io/badge/status-beta-orange">
+</p>
 
-Phase 1 covers sign-in with an API token, an overview, domains with full DNS management, alerts with notifications and a menu bar item, usage against Free plan allowances, Settings and a full Appearance screen.
+<p align="center"><b>Domains, DNS, Workers, storage, Zero Trust, Pages, WAF rules, email forwarding and Turnstile in one fast, native Mac app.</b><br>No browser tab, no Electron, no telemetry. Pure Swift and SwiftUI.</p>
 
-Phase 2a adds Workers: list, settings, variables, write-only secrets, routes, custom domains, cron triggers, versions with deploy and rollback, a code editor that saves new versions, live logs, templates, and delete. Saving code creates a version; deploying it is a separate, confirmed step.
+<p align="center"><img src="docs/images/tour.gif" alt="A tour of Nephele: overview, domains, DNS, firewall, email, Workers, Zero Trust, Turnstile, usage and appearance" width="860"></p>
 
-Phase 2b adds Storage: Workers KV (namespaces, keys, text values), D1 (databases and a SQL console, where anything that changes data asks first) and R2 (buckets and objects, delete only for now).
+> [!NOTE]
+> **Beta.** Nephele is new. Everything that *reads* from Cloudflare is covered by tests; the actions that *change* things (DNS, Workers, storage, WAF, email and so on) have been tested against recorded responses but not yet against a live account. Try changes on a throwaway domain first, and please [report anything odd](https://github.com/Ol775/nephele/issues/new/choose). See [Known issues](#known-issues).
+>
+> An independent project, not affiliated with or endorsed by Cloudflare. Cloudflare is a trademark of Cloudflare, Inc.
 
-Phase 3 adds Zero Trust: Tunnels (list, create, delete; the connector token is never shown), Access applications (list, delete) and service tokens (list, create, delete; the secret is shown once at creation and never stored).
+## What it does
 
-Phase 4 adds per-domain settings (Domains, then a domain, then Settings): SSL/TLS mode, Always use HTTPS, HTTPS rewrites, minimum TLS, TLS 1.3, security level, development mode, and cache purge (by URL, or everything after typing the domain name).
+| | |
+|---|---|
+| **Overview** | Requests, cache hit ratio, threats and open alerts for your account, with a 24 h / 7 d / 30 d chart. |
+| **Domains and DNS** | Every zone, filterable. Add, edit, proxy or delete DNS records with validation and confirmation. |
+| **Per-domain settings** | SSL/TLS mode, Always use HTTPS, minimum TLS, security level, development mode, cache purge (by URL or everything). |
+| **Firewall (WAF)** | Custom rules: list, add, turn on or off, delete. Anything that goes live asks first. |
+| **Email Routing** | Forwarding rules to your verified addresses: add, turn on or off, delete. |
+| **Workers** | Settings, variables, write-only secrets, routes, custom domains, cron triggers, versions with deploy and rollback, a code editor, live logs, templates. |
+| **Storage** | Workers KV, D1 (with a SQL console that asks before anything changes data) and R2. |
+| **Zero Trust** | Tunnels, Access applications, service tokens (secret shown once) and Gateway rules. |
+| **Turnstile** | Widgets: create (secret shown once), list, delete. |
+| **Pages** | Projects and deployments: retry, roll back, delete. |
+| **Alerts and usage** | Notifications and a menu bar item for certificate, origin, usage and deploy alerts; usage against Free-plan allowances. |
+| **Appearance** | Light, dark or system; accent colour, density, fonts, corner radius, sidebar layout. |
 
-Phase 4b adds, from a domain's toolbar, **Firewall** (WAF custom rules: list, add, turn on or off, delete; adding, turning on or deleting asks first, because a wrong expression can lock real visitors out) and **Email** (Email Routing forwarding rules to verified destination addresses: add, turn on or off, delete). It also adds a **Turnstile** section (widgets: list, create, delete; the secret key is shown once at creation and never stored) and a **Gateway** tab under Zero Trust (rules: list and delete only; editing stays in the dashboard because it replaces the whole rule).
+<p align="center"><img src="docs/images/themes.gif" alt="Nephele in several accent colours and in dark mode" width="640"></p>
 
-Phase 2c adds Pages: projects, their deployments, and retry, roll back or delete (each confirmed). Creating projects and direct uploads stay in the dashboard.
+## Install
 
-## Privacy
+**Download:** grab `Nephele-x.y.z.dmg` from the [latest release](https://github.com/Ol775/nephele/releases/latest), open it and drag Nephele to Applications.
 
-- Your API token is stored in the macOS Keychain only. It is sent only to the Cloudflare API.
-- No analytics, no telemetry, no server component. Results are cached in memory for about a minute and never written to disk.
-- Anything destructive (deleting a DNS record, rolling back or deleting a Worker, for example) asks you to confirm first, naming the target. Deleting a Worker means typing its name. Secret values are write-only and are never shown or stored.
+**Homebrew:**
 
-## Create an API token
+```sh
+brew install --cask Ol775/tap/nephele
+```
 
-In the Cloudflare dashboard go to Profile, API Tokens, Create Token. Start with read-only access:
+**From source** (Xcode 26 or later and [XcodeGen](https://github.com/yonaskolb/XcodeGen)):
 
-- Zone: Zone Read, DNS Read
-- Account: Notifications Read, Account Analytics Read, Account Settings Read
-
-For Workers add Workers Scripts Read (and Workers Tail Read for live logs, Workers Routes Read per zone). For storage add Workers KV Storage, D1 and Workers R2 Storage Read. For Zero Trust add Cloudflare Tunnel, Access: Apps and Policies and Access: Service Tokens Read. For Pages add Cloudflare Pages Read. For domain settings add Zone Settings Read (and Cache Purge to purge). For Email Routing add Email Routing Rules Read and Email Routing Addresses Read; for WAF rules Zone WAF Read; for Turnstile Turnstile Sites Read; for Gateway Zero Trust Read, each with its Edit counterpart to change anything. Add DNS Edit, Workers Scripts Edit or the storage Edit permissions later if you want to make changes. Missing permissions never break the app: the screens that need them show a prompt instead.
-
-## Build
-
-Requires Xcode 26 or later and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
-
-```bash
+```sh
 brew install xcodegen
+git clone https://github.com/Ol775/nephele && cd nephele
 xcodegen generate
-swift test --package-path Packages/CloudflareKit
-xcodebuild test -scheme Nephele -destination 'platform=macOS'
+xcodebuild -scheme Nephele -configuration Release -destination 'platform=macOS' build
 ```
 
-To regenerate the app icon from `assets/logo.svg`:
+> [!IMPORTANT]
+> Nephele is signed ad hoc, not notarized (that needs a paid Apple Developer ID). If you download the DMG, macOS blocks the first launch: open **System Settings → Privacy & Security** and choose **Open Anyway**, or run `xattr -dr com.apple.quarantine /Applications/Nephele.app`. Homebrew and in-app updates skip this step. Details in [docs/getting-started.md](docs/getting-started.md).
 
-```bash
-./scripts/make-icons.sh
+## Get started in two minutes
+
+1. In Cloudflare, go to **Profile → API Tokens → Create Token** and start with read-only permissions (see [docs/permissions.md](docs/permissions.md)).
+2. Open Nephele and paste the token. It goes into your Keychain and nowhere else.
+3. Add Edit permissions later, only for the areas where you want to make changes. Missing permissions never break the app: the screen that needs one tells you which.
+
+**Want to look around first?** Run the demo with built-in sample data. It never touches the network or your Keychain:
+
+```sh
+/Applications/Nephele.app/Contents/MacOS/Nephele --demo
 ```
 
-## Layout
+## Built to be safe with your account
 
-- `Packages/CloudflareKit`: the typed Cloudflare API client, models, DNS validation and alert de-duplication (no UI).
-- `Nephele`: the SwiftUI app, stores and screens.
-- `docs/superpowers`: the design and the implementation plan.
+- **Your token stays in the macOS Keychain.** It is only ever sent to `api.cloudflare.com`.
+- **Nothing destructive happens in one click.** Deletes name the target; the dangerous ones (Workers, buckets, Pages projects, tunnels, tokens) make you type the name. Changes that can take a site down (SSL mode, WAF rules, purging everything) explain the risk first.
+- **Secrets are write-only or shown once.** Worker secrets are never read back; service-token and Turnstile secrets appear once at creation, are never stored, and are kept out of logs and error text.
+- **Read-only until you say otherwise.** Without an Edit permission the controls switch off and say what to add.
+- **No analytics, no telemetry, no accounts.** The only other network request is the update check against this repository's GitHub releases.
+- **Signed updates.** In-app updates install only if an Ed25519 signature made offline verifies, so even a hijacked GitHub account cannot push one. See [SECURITY.md](SECURITY.md).
+
+## Updates
+
+Nephele checks this repository's releases at launch (switch it off in **Settings → Updates**) and shows an **Update** button when a newer signed version exists. One click downloads it, verifies the signature, checksum, bundle identifier and code signature, swaps it in and relaunches. The previous version is kept as a backup and restored if anything fails.
+
+## Documentation
+
+| | |
+|---|---|
+| [Getting started](docs/getting-started.md) | Install, first launch, creating a token, the demo |
+| [Permissions](docs/permissions.md) | Exactly which token permission each screen needs |
+| [Features](docs/features.md) | What every screen does and which actions ask first |
+| [Help and troubleshooting](docs/help.md) | Common problems and how to fix them |
+| [Roadmap](ROADMAP.md) | What is planned, and what needs a decision |
+| [Security](SECURITY.md) | Threat model, update trust model, how to report a vulnerability |
+| [Privacy](PRIVACY.md) | What is stored and what is sent |
+| [Contributing](CONTRIBUTING.md) | Building, testing and sending a pull request |
+| [Changelog](CHANGELOG.md) | What changed in each release |
+| [Architecture](docs/architecture.md) | How the code is laid out |
 
 ## Known issues
 
-- Nothing that writes to Cloudflare (Workers, storage, Zero Trust, Pages, zone settings, Email Routing, WAF, Turnstile, Gateway) has been exercised against a live account yet. Request and response shapes come from Cloudflare's OpenAPI spec and are covered by stubbed tests only. Try writes on a throwaway domain first.
-- The icon is a concept master. A hand-tuned 16 px variant is still to do; check it in the Dock and menu bar before release.
-- The D1 usage meters use `rowsRead` and `rowsWritten` from Cloudflare's GraphQL API, which have not been confirmed against a live account. If they fail, the other meters still show.
-- The name and logo have not been legally cleared. Search the UK IPO and USPTO registers before any public release.
+- **Writes are unverified live.** See the note at the top. Request and response shapes come from Cloudflare's OpenAPI spec and recorded fixtures.
+- **Not notarized**, so the first launch of a downloaded copy needs the **Open Anyway** step. After an update, macOS may ask once to allow Keychain access: choose **Always Allow**.
+- **WAF rules with extra options** (skip rules, custom block pages, rate limits) are shown but can't be toggled here, because Nephele would drop the options it can't display. Change those in the dashboard.
+- **The icon is a concept.** A hand-tuned 16 px version is still to do.
+- **The name and logo have not been legally cleared.** Search the UK IPO and USPTO registers before relying on them commercially.
 
 ## Licence
 
-MIT. See `LICENSE`.
+MIT. See [LICENSE](LICENSE).
