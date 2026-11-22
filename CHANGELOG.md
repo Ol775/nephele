@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.1.2
+- **Sign-in:** a Full access level, and each level lists the permissions Cloudflare's link can't pre-tick.
+- **Permissions:** Settings no longer claims "All present"; it says "No errors" and notes that an empty list can mean a missing permission. Empty Tunnels and Service tokens screens name the permission to check.
+
 ## 0.1.1
 - **Sign-in:** choose Read only or Read and edit, and the Create a token link opens Cloudflare with those permissions already ticked.
 - **Build:** Workers loading no longer relies on a newer Swift Result initialiser, so CI builds on the stock runner toolchain.
