@@ -19,7 +19,7 @@ import CloudflareKitTesting
     nonisolated static let meters = "{\"data\":{\"viewer\":{\"accounts\":[{\"workersInvocationsAdaptive\":[{\"sum\":{\"requests\":62000}}],\"kvOperationsAdaptiveGroups\":[{\"sum\":{\"requests\":91000},\"dimensions\":{\"actionType\":\"read\"}}],\"d1AnalyticsAdaptiveGroups\":[{\"sum\":{\"rowsRead\":1200000,\"rowsWritten\":3000}}],\"r2StorageAdaptiveGroups\":[{\"max\":{\"payloadSize\":1500000000,\"metadataSize\":0},\"dimensions\":{\"bucketName\":\"media\",\"datetime\":\"2026-11-21T14:00:00Z\"}}]}]}},\"errors\":null}"
 
     struct World {
-        let session: Session, settings: SettingsStore, nav: Navigator, domains: DomainsStore, alerts: AlertsStore, usage: UsageStore, workers: WorkersStore, storage: StorageStore, zeroTrust: ZeroTrustStore
+        let session: Session, settings: SettingsStore, nav: Navigator, domains: DomainsStore, alerts: AlertsStore, usage: UsageStore, workers: WorkersStore, storage: StorageStore, zeroTrust: ZeroTrustStore, pages: PagesStore
     }
 
     func world() async throws -> World {
@@ -34,6 +34,8 @@ import CloudflareKitTesting
             if path.hasSuffix("/cfd_tunnel") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"t1\",\"name\":\"homelab\",\"status\":\"healthy\"}]")) }
             if path.hasSuffix("/access/apps") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"a1\",\"name\":\"Vault\",\"domain\":\"v.example.dev\"}]")) }
             if path.hasSuffix("/service_tokens") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"s1\",\"name\":\"ci\",\"client_id\":\"c.access\"}]")) }
+            if path.hasSuffix("/pages/projects") { return TestAPI.reply(req, TestAPI.ok("[{\"name\":\"site\",\"subdomain\":\"site.pages.dev\",\"domains\":[\"site.pages.dev\"],\"production_branch\":\"main\"}]")) }
+            if path.hasSuffix("/deployments") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"d1\",\"environment\":\"production\",\"latest_stage\":{\"status\":\"success\"}}]")) }
             if path.hasSuffix("/schedules") { return TestAPI.reply(req, TestAPI.ok("{\"schedules\":[{\"cron\":\"*/30 * * * *\"}]}")) }
             if path.hasSuffix("/alerting/v3/history") { return TestAPI.reply(req, TestAPI.ok(Self.history)) }
             if path.hasSuffix("/graphql") {
@@ -49,12 +51,12 @@ import CloudflareKitTesting
         let alerts = AlertsStore(session: session, defaults: defaults)
         let usage = UsageStore(session: session, domains: domains)
         await usage.load(); await alerts.load()
-        return World(session: session, settings: settings, nav: Navigator(), domains: domains, alerts: alerts, usage: usage, workers: WorkersStore(session: session), storage: StorageStore(session: session), zeroTrust: ZeroTrustStore(session: session))
+        return World(session: session, settings: settings, nav: Navigator(), domains: domains, alerts: alerts, usage: usage, workers: WorkersStore(session: session), storage: StorageStore(session: session), zeroTrust: ZeroTrustStore(session: session), pages: PagesStore(session: session))
     }
 
     func render<V: View>(_ name: String, _ view: V, _ w: World, size: CGSize = CGSize(width: 1100, height: 720)) throws -> Int {
         let root = view
-            .environment(w.settings).environment(w.session).environment(w.nav).environment(w.domains).environment(w.alerts).environment(w.usage).environment(w.workers).environment(w.storage).environment(w.zeroTrust)
+            .environment(w.settings).environment(w.session).environment(w.nav).environment(w.domains).environment(w.alerts).environment(w.usage).environment(w.workers).environment(w.storage).environment(w.zeroTrust).environment(w.pages)
             .environment(\.nepheleTheme, NepheleTheme(w.settings.settings))
             .frame(width: size.width, height: size.height)
         let host = NSHostingView(rootView: root)
@@ -139,6 +141,10 @@ import CloudflareKitTesting
         let w = try await world(); await w.zeroTrust.loadAll()
         #expect(try render("zero-trust", ZeroTrustView(), w) > 5_000)
         #expect(try render("zero-trust-secret", SecretSheet(secret: NewServiceSecret(name: "ci", clientID: "c.access", secret: "s3cr3t")) {}, w, size: CGSize(width: 480, height: 260)) > 2_000)
+    }
+    @Test func pagesRenders() async throws {
+        let w = try await world(); await w.pages.load(); await w.pages.select(w.pages.projects.value?.first)
+        #expect(try render("pages", PagesView(), w) > 5_000)
     }
     @Test func alertsRenders() async throws {
         let w = try await world()

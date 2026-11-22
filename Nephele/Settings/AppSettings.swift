@@ -1,6 +1,6 @@
 import Foundation
 
-enum Route: String, Codable, CaseIterable, Sendable { case overview, domains, workers, storage, zeroTrust, alerts, usage, appearance, settings }
+enum Route: String, Codable, CaseIterable, Sendable { case overview, domains, workers, storage, zeroTrust, pages, alerts, usage, appearance, settings }
 enum ThemeChoice: String, Codable, CaseIterable, Sendable { case system, light, dark }
 enum Density: String, Codable, CaseIterable, Sendable { case compact, comfortable }
 enum FontChoice: String, Codable, CaseIterable, Sendable { case system, rounded, serif, mono }

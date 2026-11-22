@@ -9,6 +9,7 @@ struct NepheleApp: App {
     @State private var workers: WorkersStore
     @State private var storage: StorageStore
     @State private var zeroTrust: ZeroTrustStore
+    @State private var pages: PagesStore
     @State private var poller: AlertPoller
     @State private var settings = SettingsStore()
     @State private var navigator = Navigator()
@@ -26,6 +27,7 @@ struct NepheleApp: App {
         _workers = State(initialValue: WorkersStore(session: session))
         _storage = State(initialValue: StorageStore(session: session))
         _zeroTrust = State(initialValue: ZeroTrustStore(session: session))
+        _pages = State(initialValue: PagesStore(session: session))
         _poller = State(initialValue: AlertPoller(store: alerts, session: session, settings: settings))
     }
 
@@ -43,11 +45,12 @@ struct NepheleApp: App {
             .environment(workers)
             .environment(storage)
             .environment(zeroTrust)
+            .environment(pages)
             .environment(\.nepheleTheme, NepheleTheme(settings.settings))
             .frame(minWidth: 860, minHeight: 560)
             .task { if !AppEnvironment.isRunningTests { await session.restoreWithRetry() } }
             .task(id: session.state) { if session.state == .ready && !AppEnvironment.isRunningTests { poller.start() } else { poller.stop() } }
-            .onChange(of: session.identityEpoch) { domains.reset(); alerts.reset(); usage.reset(); workers.reset(); storage.reset(); zeroTrust.reset() }
+            .onChange(of: session.identityEpoch) { domains.reset(); alerts.reset(); usage.reset(); workers.reset(); storage.reset(); zeroTrust.reset(); pages.reset() }
         }
         .commands {
             CommandGroup(replacing: .appSettings) {
