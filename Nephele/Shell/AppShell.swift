@@ -24,6 +24,7 @@ struct AppShell: View {
                 case .domains: DomainsView()
                 case .workers: WorkersView()
                 case .storage: StorageView()
+                case .zeroTrust: ZeroTrustView()
                 case .alerts: AlertsView()
                 case .usage: UsageView()
                 case .appearance: AppearanceView()

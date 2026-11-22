@@ -27,6 +27,8 @@ struct SettingsView: View {
                         .font(.footnote).foregroundStyle(.secondary)
                     Text("Storage: Workers KV Storage, D1 and Workers R2 Storage Read to browse; the same Edit permissions to change anything.")
                         .font(.footnote).foregroundStyle(.secondary)
+                    Text("Zero Trust: Cloudflare Tunnel, Access: Apps and Policies and Access: Service Tokens Read to browse; the Write permissions to create or delete.")
+                        .font(.footnote).foregroundStyle(.secondary)
                     Text("Workers: Workers Scripts Read to browse; Workers Scripts Edit to change settings, code and deployments; Workers Tail Read for live logs; Workers Routes Read and Edit (per zone) for routes.")
                         .font(.footnote).foregroundStyle(.secondary)
                 } else {

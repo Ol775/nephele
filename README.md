@@ -8,6 +8,8 @@ Phase 2a adds Workers: list, settings, variables, write-only secrets, routes, cu
 
 Phase 2b adds Storage: Workers KV (namespaces, keys, text values), D1 (databases and a SQL console, where anything that changes data asks first) and R2 (buckets and objects, delete only for now).
 
+Phase 3 adds Zero Trust: Tunnels (list, create, delete; the connector token is never shown), Access applications (list, delete) and service tokens (list, create, delete; the secret is shown once at creation and never stored).
+
 ## Privacy
 
 - Your API token is stored in the macOS Keychain only. It is sent only to the Cloudflare API.
@@ -21,7 +23,7 @@ In the Cloudflare dashboard go to Profile, API Tokens, Create Token. Start with 
 - Zone: Zone Read, DNS Read
 - Account: Notifications Read, Account Analytics Read, Account Settings Read
 
-For Workers add Workers Scripts Read (and Workers Tail Read for live logs, Workers Routes Read per zone). For storage add Workers KV Storage, D1 and Workers R2 Storage Read. Add DNS Edit, Workers Scripts Edit or the storage Edit permissions later if you want to make changes. Missing permissions never break the app: the screens that need them show a prompt instead.
+For Workers add Workers Scripts Read (and Workers Tail Read for live logs, Workers Routes Read per zone). For storage add Workers KV Storage, D1 and Workers R2 Storage Read. For Zero Trust add Cloudflare Tunnel, Access: Apps and Policies and Access: Service Tokens Read. Add DNS Edit, Workers Scripts Edit or the storage Edit permissions later if you want to make changes. Missing permissions never break the app: the screens that need them show a prompt instead.
 
 ## Build
 
