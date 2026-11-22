@@ -14,8 +14,8 @@ extension WorkerStore {
         let name = script.id
         if versions.value == nil { versions = .loading }
         if deployments.value == nil { deployments = .loading }
-        async let v = Result { try await client.workerVersions(accountID: account, script: name) }
-        async let d = Result { try await client.deployments(accountID: account, script: name) }
+        async let v = capture { try await client.workerVersions(accountID: account, script: name) }
+        async let d = capture { try await client.deployments(accountID: account, script: name) }
         let (vr, dr) = await (v, d)
         switch vr {
         case .success(let list): versions = .loaded(list)

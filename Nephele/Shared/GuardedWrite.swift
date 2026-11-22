@@ -38,3 +38,8 @@ func loadList<S: AnyObject, T: Sendable>(_ session: Session, _ store: S, _ key: 
         if store[keyPath: key].value == nil { store[keyPath: key] = .failed(error) }
     } catch { if store[keyPath: key].value == nil { store[keyPath: key] = .failed(.transport("unknown")) } }
 }
+
+/// Async stand-in for `Result { try await … }`, which older toolchains (CI) don't have.
+func capture<T: Sendable>(_ body: @Sendable () async throws -> T) async -> Result<T, Error> {
+    do { return .success(try await body()) } catch { return .failure(error) }
+}

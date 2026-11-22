@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.1.1
+- **Sign-in:** choose Read only or Read and edit, and the Create a token link opens Cloudflare with those permissions already ticked.
+- **Build:** Workers loading no longer relies on a newer Swift Result initialiser, so CI builds on the stock runner toolchain.
+
 ## 0.1.0 (beta)
 First public release.
 

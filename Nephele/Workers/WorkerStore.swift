@@ -59,9 +59,9 @@ final class WorkerStore {
         let name = script.id
         if settings.value == nil { settings = .loading }
         if secretNames.value == nil { secretNames = .loading }
-        async let s = Result { try await client.workerSettings(accountID: account, script: name) }
-        async let n = Result { try await client.workerSecretNames(accountID: account, script: name) }
-        async let d = Result { try await client.workersDevSubdomain(accountID: account, script: name) }
+        async let s = capture { try await client.workerSettings(accountID: account, script: name) }
+        async let n = capture { try await client.workerSecretNames(accountID: account, script: name) }
+        async let d = capture { try await client.workersDevSubdomain(accountID: account, script: name) }
         let (sr, nr, dr) = await (s, n, d)
         switch sr {
         case .success(let v): settings = .loaded(v)

@@ -35,7 +35,7 @@ extension WorkerStore {
                 let batch = Array(zones[index..<min(index + 4, zones.count)])
                 index += 4
                 await withTaskGroup(of: (Zone, Result<[WorkerRoute], any Error>).self) { group in
-                    for zone in batch { group.addTask { (zone, await Result { try await client.workerRoutes(zoneID: zone.id) }) } }
+                    for zone in batch { group.addTask { (zone, await capture { try await client.workerRoutes(zoneID: zone.id) }) } }
                     for await (zone, result) in group {
                         switch result {
                         case .success(let list): routes += list.filter { $0.script == name }.map { ZoneRoute(route: $0, zone: zone) }
