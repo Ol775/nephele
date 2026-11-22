@@ -10,6 +10,8 @@ Phase 2b adds Storage: Workers KV (namespaces, keys, text values), D1 (databases
 
 Phase 3 adds Zero Trust: Tunnels (list, create, delete; the connector token is never shown), Access applications (list, delete) and service tokens (list, create, delete; the secret is shown once at creation and never stored).
 
+Phase 4 adds per-domain settings (Domains, then a domain, then Settings): SSL/TLS mode, Always use HTTPS, HTTPS rewrites, minimum TLS, TLS 1.3, security level, development mode, and cache purge (by URL, or everything after typing the domain name). WAF rules, Email Routing, Turnstile and Gateway are not built yet.
+
 Phase 2c adds Pages: projects, their deployments, and retry, roll back or delete (each confirmed). Creating projects and direct uploads stay in the dashboard.
 
 ## Privacy
@@ -25,7 +27,7 @@ In the Cloudflare dashboard go to Profile, API Tokens, Create Token. Start with 
 - Zone: Zone Read, DNS Read
 - Account: Notifications Read, Account Analytics Read, Account Settings Read
 
-For Workers add Workers Scripts Read (and Workers Tail Read for live logs, Workers Routes Read per zone). For storage add Workers KV Storage, D1 and Workers R2 Storage Read. For Zero Trust add Cloudflare Tunnel, Access: Apps and Policies and Access: Service Tokens Read. For Pages add Cloudflare Pages Read. Add DNS Edit, Workers Scripts Edit or the storage Edit permissions later if you want to make changes. Missing permissions never break the app: the screens that need them show a prompt instead.
+For Workers add Workers Scripts Read (and Workers Tail Read for live logs, Workers Routes Read per zone). For storage add Workers KV Storage, D1 and Workers R2 Storage Read. For Zero Trust add Cloudflare Tunnel, Access: Apps and Policies and Access: Service Tokens Read. For Pages add Cloudflare Pages Read. For domain settings add Zone Settings Read (and Cache Purge to purge). Add DNS Edit, Workers Scripts Edit or the storage Edit permissions later if you want to make changes. Missing permissions never break the app: the screens that need them show a prompt instead.
 
 ## Build
 

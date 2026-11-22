@@ -28,6 +28,7 @@ struct SettingsView: View {
                     Text("Storage: Workers KV Storage, D1 and Workers R2 Storage Read to browse; the same Edit permissions to change anything.")
                         .font(.footnote).foregroundStyle(.secondary)
                     Text("Pages: Cloudflare Pages Read to browse projects and deployments; Cloudflare Pages Edit to retry, roll back or delete.")
+                    Text("Domain settings: Zone Settings Read to see SSL/TLS, security and caching; Zone Settings Edit to change them; Cache Purge to purge.")
                         .font(.footnote).foregroundStyle(.secondary)
                     Text("Zero Trust: Cloudflare Tunnel, Access: Apps and Policies and Access: Service Tokens Read to browse; the Write permissions to create or delete.")
                         .font(.footnote).foregroundStyle(.secondary)

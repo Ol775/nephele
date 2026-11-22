@@ -9,8 +9,12 @@ struct DNSDetailView: View {
     @State private var priority = 10
     @State private var proxied = false
     @State private var editing: DNSRecord?
+    @State private var showSettings = false
 
-    init(zone: Zone, session: Session) { _store = State(initialValue: DNSStore(zone: zone, session: session)) }
+    private let session: Session
+    init(zone: Zone, session: Session) {
+        self.session = session
+        _store = State(initialValue: DNSStore(zone: zone, session: session)) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -43,6 +47,8 @@ struct DNSDetailView: View {
             addForm
         }
         .navigationTitle(store.zone.name)
+        .toolbar { ToolbarItem { Button("Settings", systemImage: "gearshape") { showSettings = true } } }
+        .navigationDestination(isPresented: $showSettings) { ZoneSettingsView(zone: store.zone, session: session) }
         .task { await store.load() }
         .confirmationDialog(dialogTitle, isPresented: Binding(get: { store.pending != nil }, set: { if !$0 { store.dialogDismissed() } }), presenting: store.pending) { action in
             Button(action.kind == .delete ? "Delete \(action.record.type) record" : (action.record.proxied == true ? "Switch to DNS only" : "Proxy through Cloudflare"), role: action.kind == .delete ? .destructive : nil) {

@@ -36,6 +36,7 @@ import CloudflareKitTesting
             if path.hasSuffix("/service_tokens") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"s1\",\"name\":\"ci\",\"client_id\":\"c.access\"}]")) }
             if path.hasSuffix("/pages/projects") { return TestAPI.reply(req, TestAPI.ok("[{\"name\":\"site\",\"subdomain\":\"site.pages.dev\",\"domains\":[\"site.pages.dev\"],\"production_branch\":\"main\"}]")) }
             if path.hasSuffix("/deployments") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"d1\",\"environment\":\"production\",\"latest_stage\":{\"status\":\"success\"}}]")) }
+            if path.hasSuffix("/zones/z1/settings") { return TestAPI.reply(req, TestAPI.ok("[{\"id\":\"ssl\",\"value\":\"full\",\"editable\":true},{\"id\":\"min_tls_version\",\"value\":\"1.2\"},{\"id\":\"development_mode\",\"value\":\"off\"}]")) }
             if path.hasSuffix("/schedules") { return TestAPI.reply(req, TestAPI.ok("{\"schedules\":[{\"cron\":\"*/30 * * * *\"}]}")) }
             if path.hasSuffix("/alerting/v3/history") { return TestAPI.reply(req, TestAPI.ok(Self.history)) }
             if path.hasSuffix("/graphql") {
@@ -86,6 +87,10 @@ import CloudflareKitTesting
     @Test func dnsDetailRenders() async throws {
         let w = try await world()
         #expect(try render("dns", NavigationStack { DNSDetailView(zone: TestAPI.zone, session: w.session) }, w) > 5_000)
+    }
+    @Test func zoneSettingsRenders() async throws {
+        let w = try await world()
+        #expect(try render("zone-settings", NavigationStack { ZoneSettingsView(zone: TestAPI.zone, session: w.session) }, w) > 5_000)
     }
     @Test func workersRenders() async throws {
         let w = try await world(); await w.workers.load()
