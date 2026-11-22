@@ -30,7 +30,6 @@ Shipped: overview, domains and DNS, per-domain settings and cache purge, WAF cus
 ## Needs a decision or outside help
 
 - **Notarization.** Removes the first-launch "Open Anyway" step. Requires a paid Apple Developer ID.
-- **Trademark and name clearance.** Search the UK IPO and USPTO registers for the name and logo before relying on them commercially.
 - **Sandboxing.** The app is not sandboxed because the in-app updater has to replace the app bundle. A sandboxed build for the Mac App Store would need a different update path (and App Store review of a Cloudflare client).
 
 ## Not planned

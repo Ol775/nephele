@@ -104,7 +104,6 @@ Nephele checks this repository's releases at launch (switch it off in **Settings
 - **Not notarized**, so the first launch of a downloaded copy needs the **Open Anyway** step. After an update, macOS may ask once to allow Keychain access: choose **Always Allow**.
 - **WAF rules with extra options** (skip rules, custom block pages, rate limits) are shown but can't be toggled here, because Nephele would drop the options it can't display. Change those in the dashboard.
 - **The icon is a concept.** A hand-tuned 16 px version is still to do.
-- **The name and logo have not been legally cleared.** Search the UK IPO and USPTO registers before relying on them commercially.
 
 ## Licence
 

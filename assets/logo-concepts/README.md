@@ -24,7 +24,6 @@ The other directions need more work before selection: soften the lightning readi
 
 These are original drawings, but originality of execution does not establish exclusive rights. From visual judgment only: concept 1 shares the broad ram-head/Aries category with Ram Trucks and numerous sports identities; its open crown and long central taper need particular comparison. Concept 2 occupies a crowded cloud/lightning category. Concept 3 competes with many N monograms. Concept 4 can suggest a G, wool badge or directional arrow. Concept 5 belongs to the classical cameo/profile tradition and may evoke established profile-based brands such as Wella.
 
-No external similarity search was performed, in accordance with the offline brief. This is not trademark clearance. Check the selected silhouette and name before public release.
 
 ## Validation
 
